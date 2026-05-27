@@ -1,0 +1,40 @@
+name: flags_around_the_world
+description: Educational flag-placement game
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.7.0 <4.0.0'
+  flutter: '>=3.32.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_riverpod: ^3.3.1
+  riverpod_annotation: ^4.0.2
+  flutter_svg: ^2.3.0
+  go_router: ^17.2.3
+  path_drawing: ^1.0.1
+  shared_preferences: ^2.5.5
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  riverpod_generator: ^4.0.3
+  build_runner: ^2.15.0
+  mocktail: ^1.0.5
+  flutter_lints: ^5.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - assets/flags/
+    - assets/map/
+    - assets/data/
+    - assets/audio/

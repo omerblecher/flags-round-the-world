@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "scaffoldHomeLabel": "Flags Around the World",
+  "@scaffoldHomeLabel": {
+    "description": "Label shown on the home scaffold"
+  }
+}
