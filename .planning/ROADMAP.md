@@ -40,7 +40,7 @@ Plans:
 - [ ] 01-01-PLAN.md — Flutter SDK + Python pipeline dependency verification (checkpoint)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-02-PLAN.md — Flutter project scaffold, Walking Skeleton, pubspec, manifests, Dart models
+- [x] 01-02-PLAN.md — Flutter project scaffold, Walking Skeleton, pubspec, manifests, Dart models
 
 **Wave 3** *(blocked on Wave 2 completion — plans run in parallel)*
 - [ ] 01-03-PLAN.md — Python GIS pipeline: generate world_map_paths.json + countries_en/es.json
@@ -134,7 +134,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/6 | Planning done | - |
+| 1. Foundation | 2/6 | In progress | - |
 | 2. State & Data Layer | 0/? | Not started | - |
 | 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
