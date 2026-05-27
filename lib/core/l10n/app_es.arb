@@ -1,18 +1,18 @@
 {
-  "@@locale": "en",
-  "appTitle": "Flags Around the World",
+  "@@locale": "es",
+  "appTitle": "Banderas Alrededor del Mundo",
   "@appTitle": {
     "description": "The application title shown in the app bar"
   },
-  "loadingMessage": "Loading...",
+  "loadingMessage": "Cargando...",
   "@loadingMessage": {
     "description": "Shown while assets load"
   },
-  "errorLoadingData": "Failed to load map data.",
+  "errorLoadingData": "Error al cargar los datos del mapa.",
   "@errorLoadingData": {
     "description": "Error state placeholder"
   },
-  "scaffoldHomeLabel": "Phase 1 Scaffold",
+  "scaffoldHomeLabel": "Fase 1 Andamiaje",
   "@scaffoldHomeLabel": {
     "description": "Placeholder home screen label, removed in Phase 3"
   }

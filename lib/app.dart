@@ -14,7 +14,7 @@ class App extends StatelessWidget {
       home: Builder(
         builder: (context) => Scaffold(
           body: Center(
-            child: Text(AppLocalizations.of(context)!.scaffoldHomeLabel),
+            child: Text(AppLocalizations.of(context).scaffoldHomeLabel),
           ),
         ),
       ),
