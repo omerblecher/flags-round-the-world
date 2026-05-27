@@ -27,12 +27,35 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Nothing (first phase)
 **Requirements**: COMP-01, COMP-03, I18N-01, I18N-02, I18N-03
 **Success Criteria** (what must be TRUE):
-  1. The Python script runs against the Natural Earth SVG and produces a valid `world_map_paths.json` containing ISO code, SVG path string(s), bounding box, and centroid for all ~195 countries.
+  1. The Python script runs against the Natural Earth shapefile and produces a valid `world_map_paths.json` containing ISO code, SVG path string(s), bounding box, and centroid for all 196 countries.
   2. A Dart unit test can load `world_map_paths.json` from assets, parse it, and assert that every country entry has a non-empty ISO code and at least one path string — with zero network calls.
   3. Running `flutter gen-l10n` produces generated ARB-backed localisation classes; all UI chrome strings are externalized (no hardcoded English strings in Dart UI code).
-  4. A Dart test loads `countries_en.json` and asserts exactly 195 entries are present with non-empty names; adding a `countries_es.json` file (with matching keys) causes the data service to serve Spanish names without any Dart code changes.
+  4. A Dart test loads `countries_en.json` and asserts exactly 196 entries are present with non-empty names; adding a `countries_es.json` file (with matching keys) causes the data service to serve Spanish names without any Dart code changes.
   5. The app builds and launches offline (flight-mode device) and no runtime network request is attempted; the app does not declare or request any dangerous Android permissions.
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+
+**Wave 1**
+- [ ] 01-01-PLAN.md — Flutter SDK + Python pipeline dependency verification (checkpoint)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 01-02-PLAN.md — Flutter project scaffold, Walking Skeleton, pubspec, manifests, Dart models
+
+**Wave 3** *(blocked on Wave 2 completion — plans run in parallel)*
+- [ ] 01-03-PLAN.md — Python GIS pipeline: generate world_map_paths.json + countries_en/es.json
+- [ ] 01-05-PLAN.md — ARB i18n infrastructure + flutter gen-l10n
+
+**Wave 4** *(blocked on Wave 2 + Wave 3/01-03 completion)*
+- [ ] 01-04-PLAN.md — Ad walled-garden stub + unit/architecture test files
+
+**Wave 5** *(blocked on Wave 3 + Wave 4 completion)*
+- [ ] 01-06-PLAN.md — Full integration verification + offline launch human check
+
+Cross-cutting constraints:
+- 196 countries (not 195): All plans enforce this — Kosovo (XK) + Taiwan (TW) + Holy See + UN-193
+- Package ID: com.otis.brooke.flags.around.the.world — set explicitly in 01-02 after flutter create
+- No firebase_*: COMP-01 truth enforced in 01-02 and verified in 01-06
 
 ### Phase 2: State & Data Layer
 **Goal**: The `GameSessionNotifier` state machine, golf-style scoring domain logic, and local-storage repositories are fully implemented and unit-tested before any widget is written.
@@ -52,11 +75,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Phase 2
 **Requirements**: MAP-01, MAP-02, MAP-03, MAP-04, MAP-05, GAME-01, GAME-02, GAME-03, GAME-04, GAME-05, GAME-06
 **Success Criteria** (what must be TRUE):
-  1. The world map renders all ~195 country regions as distinct droppable areas; a tester can visually identify and tap any country without the app freezing or dropping below 30 fps on a mid-range Android device (profiled with `flutter run --profile`).
+  1. The world map renders all 196 country regions as distinct droppable areas; a tester can visually identify and tap any country without the app freezing or dropping below 30 fps on a mid-range Android device (profiled with `flutter run --profile`).
   2. Pinch-to-zoom, two-finger pan, and on-screen zoom buttons all work smoothly; country name labels remain readable and scale proportionally at every zoom level.
   3. Dragging a flag card over a country visually highlights that country; releasing the card on the correct country triggers a snap animation, audio chime, and haptic pulse; releasing on the wrong country triggers a gentle error visual, distinct audio tone, and short haptic buzz — and the card returns to the tray.
   4. Drag-drop hit detection resolves correctly at 1×, 2×, and 4× zoom levels (coordinate transform via `TransformationController.toScene()` is verified by a manual test on a physical or emulated device — the known critical risk).
-  5. A full session draws all 195 flags in random order one at a time and ends with a completion screen after the last correct match; no flag is ever drawn twice in the same session.
+  5. A full session draws all 196 flags in random order one at a time and ends with a completion screen after the last correct match; no flag is ever drawn twice in the same session.
 **Plans**: TBD
 **UI hint**: yes
 
@@ -111,7 +134,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/? | Not started | - |
+| 1. Foundation | 0/6 | Planning done | - |
 | 2. State & Data Layer | 0/? | Not started | - |
 | 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
