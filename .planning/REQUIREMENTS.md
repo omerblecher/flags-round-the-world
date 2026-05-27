@@ -143,21 +143,71 @@ Deferred to future release. Architecturally supported but not in v1 roadmap.
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-03, COMP-04, I18N-01–03 | Phase 1 | Pending |
-| MAP-01–05, GAME-01–08 | Phase 2–3 | Pending |
-| MODE-01–05, SCOR-01–07, SESS-01–07 | Phase 3–4 | Pending |
-| ADS-01–10, ACCS-01–04 | Phase 5–6 | Pending |
-| SHAR-01–04 | Phase 6 | Pending |
+| COMP-01 | Phase 1: Foundation | Pending |
+| COMP-03 | Phase 1: Foundation | Pending |
+| I18N-01 | Phase 1: Foundation | Pending |
+| I18N-02 | Phase 1: Foundation | Pending |
+| I18N-03 | Phase 1: Foundation | Pending |
+| SCOR-01 | Phase 2: State & Data Layer | Pending |
+| SCOR-02 | Phase 2: State & Data Layer | Pending |
+| SCOR-04 | Phase 2: State & Data Layer | Pending |
+| MAP-01 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| MAP-02 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| MAP-03 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| MAP-04 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| MAP-05 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| GAME-01 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| GAME-02 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| GAME-03 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| GAME-04 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| GAME-05 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| GAME-06 | Phase 3: Map Rendering & Drag-Drop | Pending |
+| MODE-01 | Phase 4: Game Modes & Scoring | Pending |
+| MODE-02 | Phase 4: Game Modes & Scoring | Pending |
+| MODE-03 | Phase 4: Game Modes & Scoring | Pending |
+| MODE-04 | Phase 4: Game Modes & Scoring | Pending |
+| MODE-05 | Phase 4: Game Modes & Scoring | Pending |
+| SCOR-03 | Phase 4: Game Modes & Scoring | Pending |
+| SCOR-05 | Phase 4: Game Modes & Scoring | Pending |
+| SCOR-06 | Phase 4: Game Modes & Scoring | Pending |
+| SCOR-07 | Phase 4: Game Modes & Scoring | Pending |
+| GAME-07 | Phase 4: Game Modes & Scoring | Pending |
+| GAME-08 | Phase 4: Game Modes & Scoring | Pending |
+| SESS-01 | Phase 5: Session Polish & Accessibility | Pending |
+| SESS-02 | Phase 5: Session Polish & Accessibility | Pending |
+| SESS-03 | Phase 5: Session Polish & Accessibility | Pending |
+| SESS-04 | Phase 5: Session Polish & Accessibility | Pending |
+| SESS-05 | Phase 5: Session Polish & Accessibility | Pending |
+| SESS-06 | Phase 5: Session Polish & Accessibility | Pending |
+| SESS-07 | Phase 5: Session Polish & Accessibility | Pending |
+| ACCS-01 | Phase 5: Session Polish & Accessibility | Pending |
+| ACCS-02 | Phase 5: Session Polish & Accessibility | Pending |
+| ACCS-03 | Phase 5: Session Polish & Accessibility | Pending |
+| ACCS-04 | Phase 5: Session Polish & Accessibility | Pending |
+| SHAR-01 | Phase 5: Session Polish & Accessibility | Pending |
+| SHAR-02 | Phase 5: Session Polish & Accessibility | Pending |
+| SHAR-03 | Phase 5: Session Polish & Accessibility | Pending |
+| SHAR-04 | Phase 5: Session Polish & Accessibility | Pending |
+| COMP-02 | Phase 5: Session Polish & Accessibility | Pending |
+| COMP-04 | Phase 5: Session Polish & Accessibility | Pending |
+| ADS-01 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-02 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-03 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-04 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-05 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-06 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-07 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-08 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-09 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-10 | Phase 6: AdMob & COPPA Audit | Pending |
 
 **Coverage:**
-- v1 requirements: 47 total
-- Mapped to phases: TBD (roadmapper will assign)
-- Unmapped: TBD
+- v1 requirements: 57 total
+- Mapped to phases: 57/57
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-27*
-*Last updated: 2026-05-27 after initial definition*
+*Last updated: 2026-05-27 after roadmap creation*
