@@ -16,9 +16,9 @@ progress:
 
 ## Current Status
 
-**Phase:** 3 — NOT STARTED. Phase 2 complete. Ready to discuss/plan Phase 3.
+**Phase:** 3 — Context gathered. Ready to plan.
 **Last updated:** 2026-05-28
-**Resume file:** .planning/ROADMAP.md
+**Resume file:** .planning/phases/03-map-rendering-drag-drop/03-CONTEXT.md
 
 ## Project Reference
 
@@ -37,6 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
   - Q3 resolution: Phase 3 calls completeGame() explicitly (not auto-triggered by recordDrop).
   - SC2 typo confirmed: ROADMAP "8 points" → correct value is 18 (3 + 15 golf-style scoring).
 - 2026-05-28: Phase 2 execution completed. GameSessionNotifier, HighScoreRepository, GameStateRepository all implemented and tested. 18/18 tests green. SCOR-01, SCOR-02, SCOR-04 validated. Code review: 2 critical bugs noted (RealTicker timer leak, startGame stop-before-start).
+- 2026-05-28: Phase 3 discussion completed. Context captured in 03-CONTEXT.md. 4 areas decided: map visual style (atlas palette, light-blue ocean, gold drag-highlight), flag tray (bottom strip, single card, 3:2 rectangular), feedback animations (pin-to-centroid correct, spring-bounce incorrect, audio stubbed, HapticFeedback), hit detection (Path.contains + small-country bbox expansion + smallest-bbox tiebreaker, spike-first).
 
 ## Decisions
 
