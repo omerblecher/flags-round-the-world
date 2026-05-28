@@ -97,8 +97,32 @@ Cross-cutting constraints:
   3. Dragging a flag card over a country visually highlights that country; releasing the card on the correct country triggers a snap animation, audio chime, and haptic pulse; releasing on the wrong country triggers a gentle error visual, distinct audio tone, and short haptic buzz — and the card returns to the tray.
   4. Drag-drop hit detection resolves correctly at 1×, 2×, and 4× zoom levels (coordinate transform via `TransformationController.toScene()` is verified by a manual test on a physical or emulated device — the known critical risk).
   5. A full session draws all 196 flags in random order one at a time and ends with a completion screen after the last correct match; no flag is ever drawn twice in the same session.
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 5 plans
+
+Plans:
+
+**Wave 1**
+- [ ] 03-01-PLAN.md — Coordinate-transform spike + AudioService stub + test stubs (RED state) [HUMAN CHECKPOINT]
+
+**Wave 2** *(blocked on Wave 1 spike checkpoint)*
+- [ ] 03-02-PLAN.md — WorldMapPainter + HighlightPainter + InteractiveViewer screen
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 03-03-PLAN.md — FlagTray widget + Draggable + DragTarget + hit detection
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 03-04-PLAN.md — Correct/incorrect feedback animations + audio + haptics + flag sequence + completion screen
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 03-05-PLAN.md — Integration gate: full suite + 60fps profile + SC4 manual zoom verification [HUMAN CHECKPOINT]
+
+Cross-cutting constraints:
+- Coordinate transform: always global → renderBox.globalToLocal() → toScene() — three steps, never skip step 2
+- Flag tray OUTSIDE InteractiveViewer; single DragTarget INSIDE — locked after Phase 3
+- Two-layer CustomPainter (WorldMapPainter + HighlightPainter) in separate RepaintBoundary containers
+- GameSessionNotifier zero imports from features/ads/ (ads_isolation_test.dart enforces)
+- just_audio ^0.10.5 added in Plan 03-01; AudioService in lib/core/audio/ (not features/ads/)
+- 196 countries enforced throughout (not 195)
 
 ### Phase 4: Game Modes & Scoring
 **Goal**: All four game modes are selectable and behave correctly; the live scoring HUD displays accurate score, timer, and progress; hints are available; and the completion screen shows stars and personal-best celebration.
@@ -153,7 +177,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
 | 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
-| 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
+| 3. Map Rendering & Drag-Drop | 0/5 | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |
 | 6. AdMob & COPPA Audit | 0/? | Not started | - |
