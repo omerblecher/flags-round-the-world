@@ -13,7 +13,7 @@ Six phases deliver a COPPA-compliant, fully offline Flutter educational game fro
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation** - Asset pipeline, Dart domain models, i18n infrastructure, and offline/compliance baseline
-- [ ] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
+- [x] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
 - [ ] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
 - [ ] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence
 - [ ] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
-| 2. State & Data Layer | 3/3 | In progress | - |
+| 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
 | 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |

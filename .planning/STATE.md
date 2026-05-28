@@ -2,30 +2,30 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase-2-planned
+status: phase-3-not-started
 last_updated: "2026-05-28T00:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 4
-  percent: 0
+  completed_plans: 7
+  percent: 33
 ---
 
 # Project State
 
 ## Current Status
 
-**Phase:** 2 — COMPLETE. All 3 plans executed. Ready for verify-work.
+**Phase:** 3 — NOT STARTED. Phase 2 complete. Ready to discuss/plan Phase 3.
 **Last updated:** 2026-05-28
-**Resume file:** .planning/phases/02-state-data-layer/02-03-SUMMARY.md
+**Resume file:** .planning/ROADMAP.md
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** A child or adult must be able to learn every country's flag and location through satisfying, rewarding gameplay — with zero frustration from tiny tap targets, unreadable text, or data privacy concerns.
-**Current focus:** Phase 2 — State & Data Layer (ready to execute)
+**Current focus:** Phase 3 — Map Rendering & Drag-Drop (next)
 
 ## Phase History
 
@@ -36,6 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 - 2026-05-28: Phase 2 planning completed. 3 plans created across 3 waves. Verification passed.
   - Q3 resolution: Phase 3 calls completeGame() explicitly (not auto-triggered by recordDrop).
   - SC2 typo confirmed: ROADMAP "8 points" → correct value is 18 (3 + 15 golf-style scoring).
+- 2026-05-28: Phase 2 execution completed. GameSessionNotifier, HighScoreRepository, GameStateRepository all implemented and tested. 18/18 tests green. SCOR-01, SCOR-02, SCOR-04 validated. Code review: 2 critical bugs noted (RealTicker timer leak, startGame stop-before-start).
 
 ## Decisions
 
@@ -48,3 +49,6 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01 | 02 | 453s | 2 | 23 |
+| 02 | 01 | 300s | 3 | 9 |
+| 02 | 02 | 180s | 3 | 2 |
+| 02 | 03 | 120s | 1 | 0 |

@@ -38,10 +38,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Scoring & Progress
 
-- [ ] **SCOR-01**: Score increments by 1 point for every 10 seconds of elapsed game time
-- [ ] **SCOR-02**: Score increments by 5 points for every incorrect flag placement
+- [x] **SCOR-01**: Score increments by 1 point for every 10 seconds of elapsed game time *(Validated in Phase 2: State & Data Layer)*
+- [x] **SCOR-02**: Score increments by 5 points for every incorrect flag placement *(Validated in Phase 2: State & Data Layer)*
 - [ ] **SCOR-03**: Live score and running timer are displayed in the persistent top HUD throughout gameplay
-- [ ] **SCOR-04**: The lowest (best) score for each of the 4 levels is stored locally on the device
+- [x] **SCOR-04**: The lowest (best) score for each of the 4 levels is stored locally on the device *(Validated in Phase 2: State & Data Layer)*
 - [ ] **SCOR-05**: If the user beats their lowest score for a level, a celebratory personal-best milestone screen is shown
 - [ ] **SCOR-06**: Completion screen displays a 1–3 star rating based on performance relative to personal best
 - [ ] **SCOR-07**: A progress bar showing flags matched vs. total flags remaining is always visible in the HUD
