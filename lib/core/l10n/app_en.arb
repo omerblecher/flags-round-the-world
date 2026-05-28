@@ -15,5 +15,47 @@
   "scaffoldHomeLabel": "Phase 1 Scaffold",
   "@scaffoldHomeLabel": {
     "description": "Placeholder home screen label, removed in Phase 3"
+  },
+  "zoomInTooltip": "Zoom in",
+  "@zoomInTooltip": {
+    "description": "Tooltip for the zoom-in button on the map screen"
+  },
+  "zoomOutTooltip": "Zoom out",
+  "@zoomOutTooltip": {
+    "description": "Tooltip for the zoom-out button on the map screen"
+  },
+  "loadingMap": "Loading map...",
+  "@loadingMap": {
+    "description": "Shown while the world map data is loading"
+  },
+  "mapLoadError": "Failed to load map.",
+  "@mapLoadError": {
+    "description": "Shown when the world map data fails to load"
+  },
+  "completionTitle": "Congratulations!",
+  "@completionTitle": {
+    "description": "Heading shown on the game completion screen"
+  },
+  "completionScore": "Score: {score}",
+  "@completionScore": {
+    "description": "Shows the player's final score",
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "completionElapsed": "Time: {time}",
+  "@completionElapsed": {
+    "description": "Shows the elapsed game time",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "completionPlayAgain": "Play Again",
+  "@completionPlayAgain": {
+    "description": "Button label to restart the game from the completion screen"
   }
 }

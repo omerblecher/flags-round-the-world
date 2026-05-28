@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'generated/l10n/app_localizations.dart';
+import 'features/map/map_screen.dart';
+import 'features/map/spike_map_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -13,8 +15,16 @@ class App extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
         builder: (context) => Scaffold(
-          body: Center(
-            child: Text(AppLocalizations.of(context).scaffoldHomeLabel),
+          body: const MapScreen(),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const SpikeMapScreen(),
+              ),
+            ),
+            label: const Text('Spike'),
+            icon: const Icon(Icons.map),
           ),
         ),
       ),

@@ -15,5 +15,47 @@
   "scaffoldHomeLabel": "Fase 1 Andamiaje",
   "@scaffoldHomeLabel": {
     "description": "Placeholder home screen label, removed in Phase 3"
+  },
+  "zoomInTooltip": "Acercar",
+  "@zoomInTooltip": {
+    "description": "Tooltip for the zoom-in button on the map screen"
+  },
+  "zoomOutTooltip": "Alejar",
+  "@zoomOutTooltip": {
+    "description": "Tooltip for the zoom-out button on the map screen"
+  },
+  "loadingMap": "Cargando mapa...",
+  "@loadingMap": {
+    "description": "Shown while the world map data is loading"
+  },
+  "mapLoadError": "Error al cargar el mapa.",
+  "@mapLoadError": {
+    "description": "Shown when the world map data fails to load"
+  },
+  "completionTitle": "¡Felicidades!",
+  "@completionTitle": {
+    "description": "Heading shown on the game completion screen"
+  },
+  "completionScore": "Puntuación: {score}",
+  "@completionScore": {
+    "description": "Shows the player's final score",
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "completionElapsed": "Tiempo: {time}",
+  "@completionElapsed": {
+    "description": "Shows the elapsed game time",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "completionPlayAgain": "Jugar de nuevo",
+  "@completionPlayAgain": {
+    "description": "Button label to restart the game from the completion screen"
   }
 }

@@ -177,7 +177,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
 | 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
-| 3. Map Rendering & Drag-Drop | 0/5 | Not started | - |
+| 3. Map Rendering & Drag-Drop | 0/5 | Planned | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |
 | 6. AdMob & COPPA Audit | 0/? | Not started | - |
