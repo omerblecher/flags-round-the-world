@@ -331,7 +331,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           final scenePoint =
                               _toSceneFromGlobal(details.offset);
                           if (scenePoint == null) return true;
-                          final hitIso = hitTest(scenePoint, _countries);
+                          final scale =
+                              _controller.value.getMaxScaleOnAxis();
+                          final hitIso = hitTest(
+                            scenePoint,
+                            _countries,
+                            scale: scale,
+                          );
                           setState(() => _hoveredIso = hitIso);
                           return true;
                         },
@@ -339,7 +345,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           final scenePoint =
                               _toSceneFromGlobal(details.offset);
                           if (scenePoint == null) return;
-                          final hitIso = hitTest(scenePoint, _countries);
+                          final scale =
+                              _controller.value.getMaxScaleOnAxis();
+                          final hitIso = hitTest(
+                            scenePoint,
+                            _countries,
+                            scale: scale,
+                          );
                           final isCorrect = hitIso == _currentIsoCode;
                           _handleDrop(hitIso, isCorrect);
                         },
