@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,10 +66,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   OverlayEntry? _activeOverlay;
 
+  // ---------- Current viewport scale (for scale-adaptive HighlightPainter) ---
+
+  double _currentScale = 1.0;
+
   // --------------------------------------------------------------------------
 
   @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onScaleChanged);
+  }
+
+  void _onScaleChanged() {
+    final s = _controller.value.entry(0, 0);
+    if ((s - _currentScale).abs() > 0.005) {
+      setState(() => _currentScale = s);
+    }
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_onScaleChanged);
     _activeOverlay?.remove();
     _activeOverlay = null;
     _controller.dispose();
@@ -85,6 +105,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (_remainingIsoCodes.isNotEmpty) {
       _currentIsoCode = _remainingIsoCodes.first;
     }
+    // Fit the full 2000×1000 map into the viewport on first data load.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapToScreen());
+  }
+
+  void _fitMapToScreen() {
+    final box = _ivKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    const mapW = 2000.0;
+    const mapH = 1000.0;
+    final scale = math.min(box.size.width / mapW, box.size.height / mapH)
+        .clamp(0.08, 1.0);
+    final tx = (box.size.width - mapW * scale) / 2;
+    final ty = (box.size.height - mapH * scale) / 2;
+    final m = Matrix4.identity()
+      ..setEntry(0, 0, scale)
+      ..setEntry(1, 1, scale)
+      ..setEntry(2, 2, scale)
+      ..setEntry(0, 3, tx)
+      ..setEntry(1, 3, ty);
+    _controller.value = m;
   }
 
   // ---------------------------------------------------------------------------
@@ -142,6 +182,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final double ty = m.entry(1, 3);
     m.setEntry(0, 0, newScale);
     m.setEntry(1, 1, newScale);
+    // (2,2) must stay in sync with (0,0)/(1,1) so getMaxScaleOnAxis() returns
+    // the correct 2-D scale instead of 1.0 (the untouched Z-axis default).
+    // Without this, zooming out below 1.0 then pressing "+" causes a wild jump.
+    m.setEntry(2, 2, newScale);
     m.setEntry(0, 3, cx + (tx - cx) * actualFactor);
     m.setEntry(1, 3, cy + (ty - cy) * actualFactor);
     _controller.value = m;
@@ -313,13 +357,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           size: const Size(2000, 1000),
                         ),
                       ),
-                      // Layer 2: dynamic hover highlight
+                      // Layer 2: dynamic hover highlight + target indicator
                       RepaintBoundary(
                         child: CustomPaint(
                           willChange: true,
                           painter: HighlightPainter(
                             hoveredIso: _hoveredIso,
                             countryIndex: _countryIndex,
+                            targetIsoCode: _currentIsoCode.isEmpty
+                                ? null
+                                : _currentIsoCode,
+                            viewScale: _currentScale,
                           ),
                           size: const Size(2000, 1000),
                         ),

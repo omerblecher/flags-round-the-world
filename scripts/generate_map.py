@@ -177,8 +177,17 @@ def main():
 
         try:
             merged = unary_union(geometries)
-            cx = lon_to_x(merged.centroid.x)
-            cy = lat_to_y(merged.centroid.y)
+            # Use the largest polygon's representative_point() so the centroid
+            # always falls inside the main territory, not in overseas territories
+            # or across a border (which happens with area-weighted union centroid
+            # for countries like France, US, South Africa).
+            if isinstance(merged, MultiPolygon):
+                largest = max(merged.geoms, key=lambda p: p.area)
+            else:
+                largest = merged
+            rep = largest.representative_point()
+            cx = lon_to_x(rep.x)
+            cy = lat_to_y(rep.y)
         except Exception:
             cx = round(sum(all_xs) / len(all_xs), 2)
             cy = round(sum(all_ys) / len(all_ys), 2)
