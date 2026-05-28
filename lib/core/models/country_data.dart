@@ -19,6 +19,10 @@ class CountryData {
   final List<Path> paths;
   final BoundingBox boundingBox;
   final Offset centroid;
+  // True when the SVG pipeline could not render the country accurately and
+  // stored a 4-vertex bounding-box rectangle instead of the real polygon.
+  // These are rendered as dot markers rather than filled shapes.
+  final bool isDegenerate;
 
   const CountryData({
     required this.isoCode,
@@ -26,6 +30,7 @@ class CountryData {
     required this.paths,
     required this.boundingBox,
     required this.centroid,
+    required this.isDegenerate,
   });
 
   factory CountryData.fromJson(Map<String, dynamic> json) {
@@ -39,6 +44,17 @@ class CountryData {
       paths: paths,
       boundingBox: bb,
       centroid: Offset((c['x'] as num).toDouble(), (c['y'] as num).toDouble()),
+      isDegenerate: _checkDegenerate(pathStrings),
     );
+  }
+
+  // A degenerate path is a single 4-vertex axis-aligned rectangle placed by
+  // the SVG pipeline as a fallback for countries too small to digitise.
+  // Pattern: "M x,y L x2,y L x2,y2 L x,y2 Z" — exactly 3 L commands, closed.
+  static bool _checkDegenerate(List<String> pathStrings) {
+    if (pathStrings.length != 1) return false;
+    final s = pathStrings[0];
+    final lCount = s.split('L').length - 1;
+    return lCount == 3 && s.trimRight().endsWith('Z');
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flags_around_the_world/core/models/country_data.dart';
 
@@ -10,6 +11,8 @@ const _palette = [
   Color(0xFFA07EC8), // Oceania  — purple
   Color(0xFFE8D870), // Antarctica / other — light yellow
 ];
+
+const double _kDotRadius = 5.0; // scene units for degenerate-path dot markers
 
 const _matchedColor = Color(0xFFAAAAAA); // grey for already-matched countries
 const _oceanColor   = Color(0xFFA8D5E8); // light blue background
@@ -27,7 +30,7 @@ class WorldMapPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WorldMapPainter old) =>
-      old.matchedIsoCodes.length != matchedIsoCodes.length;
+      !setEquals(old.matchedIsoCodes, matchedIsoCodes);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -49,9 +52,16 @@ class WorldMapPainter extends CustomPainter {
       final isMatched = matchedIsoCodes.contains(country.isoCode);
       fillPaint.color = isMatched ? _matchedColor : _palette[i % _palette.length];
 
-      for (final path in country.paths) {
-        canvas.drawPath(path, fillPaint);
-        canvas.drawPath(path, borderPaint);
+      if (country.isDegenerate) {
+        // SVG pipeline stored a 4-vertex bbox rectangle — draw a dot marker
+        // at the centroid so it looks like a map pin, not a weird square.
+        canvas.drawCircle(country.centroid, _kDotRadius, fillPaint);
+        canvas.drawCircle(country.centroid, _kDotRadius, borderPaint);
+      } else {
+        for (final path in country.paths) {
+          canvas.drawPath(path, fillPaint);
+          canvas.drawPath(path, borderPaint);
+        }
       }
     }
 

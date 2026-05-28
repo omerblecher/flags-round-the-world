@@ -26,6 +26,7 @@ CountryData _makeCountry({
     paths: [path],
     boundingBox: bbox,
     centroid: centroid,
+    isDegenerate: false,
   );
 }
 

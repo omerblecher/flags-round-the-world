@@ -47,14 +47,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   String _currentIsoCode = '';
   List<String> _remainingIsoCodes = [];
-  final Set<String> _matchedIsoCodes = {};
+  // Not 'final' — replaced with a new Set on each advance so shouldRepaint
+  // receives distinct object references and can detect the change.
+  Set<String> _matchedIsoCodes = {};
   bool _sequenceInitialized = false;
 
   // ---------- Tray keys -------------------------------------------------------
 
   // Re-created each time we advance to a new flag so AnimatedSwitcher animates.
   GlobalKey<FlagTrayState> _trayKey = GlobalKey<FlagTrayState>();
-  final GlobalKey _trayCardKey = GlobalKey();
+  // Must be a new instance on every advance: AnimatedSwitcher mounts old and
+  // new FlagTray simultaneously, so sharing a GlobalKey throws.
+  GlobalKey _trayCardKey = GlobalKey();
 
   // ---------- Overlay animation -----------------------------------------------
 
@@ -90,7 +94,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _advanceToNextFlag() async {
     if (_remainingIsoCodes.isEmpty) return;
     setState(() {
-      _matchedIsoCodes.add(_currentIsoCode);
+      // Spread into a new Set so WorldMapPainter.shouldRepaint receives distinct
+      // object references and correctly triggers a repaint.
+      _matchedIsoCodes = {..._matchedIsoCodes, _currentIsoCode};
       _remainingIsoCodes.removeAt(0);
     });
     if (_remainingIsoCodes.isEmpty) {
@@ -109,8 +115,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     } else {
       setState(() {
         _currentIsoCode = _remainingIsoCodes.first;
-        // New GlobalKey instance → AnimatedSwitcher detects change and animates.
+        // New GlobalKey instances → AnimatedSwitcher detects widget change.
         _trayKey = GlobalKey<FlagTrayState>();
+        _trayCardKey = GlobalKey();
       });
     }
   }
@@ -147,8 +154,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Coordinate transform helpers.
   // ---------------------------------------------------------------------------
 
-  Offset _toSceneFromGlobal(Offset globalOffset) {
-    final box = _ivKey.currentContext!.findRenderObject() as RenderBox;
+  Offset? _toSceneFromGlobal(Offset globalOffset) {
+    final box = _ivKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return null;
     return _controller.toScene(box.globalToLocal(globalOffset));
   }
 
@@ -322,6 +330,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         onWillAcceptWithDetails: (details) {
                           final scenePoint =
                               _toSceneFromGlobal(details.offset);
+                          if (scenePoint == null) return true;
                           final hitIso = hitTest(scenePoint, _countries);
                           setState(() => _hoveredIso = hitIso);
                           return true;
@@ -329,6 +338,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         onAcceptWithDetails: (details) {
                           final scenePoint =
                               _toSceneFromGlobal(details.offset);
+                          if (scenePoint == null) return;
                           final hitIso = hitTest(scenePoint, _countries);
                           final isCorrect = hitIso == _currentIsoCode;
                           _handleDrop(hitIso, isCorrect);
@@ -370,12 +380,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
         // the widget change and plays the slide-in transition.
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) => SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          // FadeTransition keeps the widget at its laid-out position so its
+          // hit-test area is valid throughout the transition. SlideTransition
+          // moves the hit-test area with the animation, making the Draggable
+          // unreachable during the 300 ms slide-in window (Bug 1 root cause).
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
             child: child,
           ),
           child: _currentIsoCode.isEmpty

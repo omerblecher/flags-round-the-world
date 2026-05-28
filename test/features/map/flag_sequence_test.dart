@@ -11,6 +11,7 @@ CountryData _makeCountry(String isoCode) {
     paths: const [],
     boundingBox: const BoundingBox(x: 0, y: 0, w: 10, h: 10),
     centroid: Offset.zero,
+    isDegenerate: false,
   );
 }
 

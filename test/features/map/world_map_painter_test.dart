@@ -10,6 +10,7 @@ CountryData _minimalCountry(String iso) => CountryData(
       paths: const [],
       boundingBox: const BoundingBox(x: 0, y: 0, w: 10, h: 10),
       centroid: Offset.zero,
+      isDegenerate: false,
     );
 
 void main() {
