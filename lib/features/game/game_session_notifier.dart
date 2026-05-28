@@ -26,6 +26,9 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
 
   int _elapsedSeconds = 0;
   int _countdownTick = 0;
+  // Populated by Phase 4 mode-specific logic; kept here so the notifier
+  // owns the full session state without model changes in a later phase.
+  // ignore: unused_field
   List<String> _remainingIsoCodes = [];
 
   @override
@@ -45,7 +48,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
   /// Number of countdown seconds remaining (3 → 2 → 1 → 0).
   int get countdownSecondsRemaining => 3 - _countdownTick;
 
-  Future<void> startGame(GameMode mode) async {
+  void startGame(GameMode mode) {
     _elapsedSeconds = 0;
     _countdownTick = 0;
     _remainingIsoCodes = [];

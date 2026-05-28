@@ -63,7 +63,7 @@ void main() {
       expect(initial.phase, GamePhase.idle);
 
       // After startGame: countdown
-      await container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
       expect(container.read(gameSessionProvider).value!.phase,
           GamePhase.countdown);
 
@@ -92,7 +92,7 @@ void main() {
 
     test('SC2: 30s + 3 errors = 18 points (golf-style, per D-13)', () async {
       // Start and advance through countdown
-      await container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
       fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
@@ -120,7 +120,7 @@ void main() {
     });
 
     test('SCOR-01: score increments 1pt per 10s elapsed', () async {
-      await container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
       // Advance through countdown
       fakeTicker.tick();
       fakeTicker.tick();
@@ -144,7 +144,7 @@ void main() {
     });
 
     test('SCOR-02: score increments 5pt per incorrect drop', () async {
-      await container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
       // Advance through countdown
       fakeTicker.tick();
       fakeTicker.tick();
@@ -164,7 +164,7 @@ void main() {
     });
 
     test('SC4: saveSession called once per correct drop', () async {
-      await container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
       // Advance through countdown
       fakeTicker.tick();
       fakeTicker.tick();
