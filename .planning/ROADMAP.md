@@ -67,7 +67,22 @@ Cross-cutting constraints:
   2. A unit test simulates 30 seconds elapsed + 3 incorrect drops and asserts the score is exactly 8 points (3 × 10s intervals = 3 pts + 3 × 5 incorrect = 15 pts → wait, 30s = 3 × 10s = 3 pts, 3 errors × 5 = 15 pts, total 18 pts); the scorer produces the correct golf-style total for any elapsed-time + error-count input.
   3. `HighScoreRepository` writes a new best score to `shared_preferences`, reads it back on a fresh instance, and returns the stored value — verified by a test using a mock `SharedPreferences`.
   4. After simulating a correct flag drop, `GameSessionNotifier` immediately writes current state to storage (not deferred to game-end), confirmed by asserting the mock storage write count equals the correct-drop count.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+
+**Wave 1**
+- [ ] 02-01-PLAN.md — Test stubs (RED state), domain type contracts, Ticker abstraction, repository interfaces + impls
+
+**Wave 2** *(both plans blocked on Wave 1 completion — run in parallel)*
+- [ ] 02-02-PLAN.md — GameSessionNotifier: full state machine, scoring, TDD red→green→refactor
+- [ ] 02-03-PLAN.md — Phase-end integration verification + human checkpoint
+
+Cross-cutting constraints:
+- GameSessionNotifier must have zero imports from features/ads/ (enforced by ads_isolation_test.dart)
+- Score formula: (elapsedSeconds ~/ 10) + (errorCount * 5) — ROADMAP SC2 "8 points" is a confirmed typo; correct is 18
+- No @riverpod codegen: manual AsyncNotifier + top-level provider declaration only
+- No new packages: all test infrastructure already in pubspec.yaml
 
 ### Phase 3: Map Rendering & Drag-Drop
 **Goal**: A tester can open the app, see the interactive world map, drag a flag card from the tray, drop it onto a country at any zoom level, and receive correct/incorrect feedback — with hit detection validated at 1×, 2×, and 4× zoom.
@@ -135,7 +150,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
-| 2. State & Data Layer | 0/? | Not started | - |
+| 2. State & Data Layer | 0/3 | Not started | - |
 | 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |
