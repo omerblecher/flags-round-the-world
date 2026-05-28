@@ -16,9 +16,9 @@ progress:
 
 ## Current Status
 
-**Phase:** 2 — IN PROGRESS. Executing (1/3 plans complete).
+**Phase:** 2 — IN PROGRESS. Executing (2/3 plans complete).
 **Last updated:** 2026-05-28
-**Resume file:** .planning/phases/02-state-data-layer/02-02-PLAN.md
+**Resume file:** .planning/phases/02-state-data-layer/02-03-PLAN.md
 
 ## Project Reference
 
