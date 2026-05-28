@@ -13,7 +13,15 @@ import 'package:flags_around_the_world/core/data/high_score_repository.dart';
 class MockGameStateRepository extends Mock implements GameStateRepository {}
 class MockHighScoreRepository extends Mock implements HighScoreRepository {}
 
+// Fallback values required by mocktail for any() matchers on custom types.
+class _FakeGameSession extends Fake implements GameSession {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeGameSession());
+    registerFallbackValue(GameMode.learn);
+  });
+
   group('GameSessionNotifier', () {
     late FakeTicker fakeTicker;
     late MockGameStateRepository mockGameStateRepo;
