@@ -2,21 +2,21 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase-3-planned
-last_updated: "2026-05-28T13:29:28.187Z"
+status: phase-3-complete
+last_updated: "2026-05-28T18:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
   completed_plans: 12
-  percent: 33
+  percent: 50
 ---
 
 # Project State
 
 ## Current Status
 
-**Phase:** 3 — Planned. Ready to execute.
+**Phase:** 4 — Game Modes & Scoring (next)
 **Last updated:** 2026-05-28
 **Resume file:** None
 
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** A child or adult must be able to learn every country's flag and location through satisfying, rewarding gameplay — with zero frustration from tiny tap targets, unreadable text, or data privacy concerns.
-**Current focus:** Phase 3 — Map Rendering & Drag-Drop (next)
+**Current focus:** Phase 4 — Game Modes & Scoring
 
 ## Phase History
 
@@ -39,6 +39,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 - 2026-05-28: Phase 2 execution completed. GameSessionNotifier, HighScoreRepository, GameStateRepository all implemented and tested. 18/18 tests green. SCOR-01, SCOR-02, SCOR-04 validated. Code review: 2 critical bugs noted (RealTicker timer leak, startGame stop-before-start).
 - 2026-05-28: Phase 3 discussion completed. Context captured in 03-CONTEXT.md. 4 areas decided: map visual style (atlas palette, light-blue ocean, gold drag-highlight), flag tray (bottom strip, single card, 3:2 rectangular), feedback animations (pin-to-centroid correct, spring-bounce incorrect, audio stubbed, HapticFeedback), hit detection (Path.contains + small-country bbox expansion + smallest-bbox tiebreaker, spike-first).
 - 2026-05-28: Phase 3 planning completed. 5 plans across 5 waves. Verification: PASS. Key design: coordinate-transform spike gates Wave 2, single DragTarget (not 196), two-layer RepaintBoundary painter, 32-scene-unit bbox floor for microstates, just_audio added in Plan 03-01.
+- 2026-05-28: Phase 3 execution completed. SC4 manual test PASSED (human-approved). Key post-execution fixes: drag anchor coordinate bug (details.offset + kPinAnchor), effective-centroid tiebreaker for multi-polygon countries (Malaysia peninsula / Indonesia), hover highlight scoped to current-target-only (suppresses Venezuela false-positive near Grenada), world map wraps horizontally (4000×1000 canvas, two copies), max zoom raised to 32×. 47/47 unit tests green.
 
 ## Decisions
 

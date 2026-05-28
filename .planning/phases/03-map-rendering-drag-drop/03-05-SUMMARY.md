@@ -1,7 +1,7 @@
 ---
 plan: 03-05
 phase: 03-map-rendering-drag-drop
-status: awaiting-human-checkpoint
+status: complete
 ---
 
 # Plan 03-05 Summary: Integration Gate

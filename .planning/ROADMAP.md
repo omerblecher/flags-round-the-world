@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation** - Asset pipeline, Dart domain models, i18n infrastructure, and offline/compliance baseline
 - [x] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
-- [ ] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
-- [ ] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence
+- [x] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
+- [ ] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence ← NEXT
 - [ ] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
 - [ ] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
 

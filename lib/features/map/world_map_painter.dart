@@ -34,19 +34,29 @@ class WorldMapPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Background (ocean)
+    // Background covers the full doubled canvas (ocean behind both copies).
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..color = _oceanColor,
     );
 
+    // Draw the canonical world (x = 0..2000) then a right-hand copy
+    // (x = 2000..4000) so the player can pan past the date line to the Americas.
+    _drawWorldCopy(canvas);
+    canvas.save();
+    canvas.translate(2000, 0);
+    _drawWorldCopy(canvas);
+    canvas.restore();
+  }
+
+  void _drawWorldCopy(Canvas canvas) {
     final fillPaint  = Paint()..style = PaintingStyle.fill;
     final borderPaint = Paint()
       ..style       = PaintingStyle.stroke
       ..color       = _borderColor
       ..strokeWidth = 1.2;
 
-    // 2 & 3. Fills + borders
+    // Fills + borders
     for (int i = 0; i < countries.length; i++) {
       final country = countries[i];
       final isMatched = matchedIsoCodes.contains(country.isoCode);
@@ -65,7 +75,7 @@ class WorldMapPainter extends CustomPainter {
       }
     }
 
-    // 4. Centroid labels
+    // Centroid labels
     for (final country in countries) {
       _drawLabel(canvas, country.isoCode, country.centroid);
     }

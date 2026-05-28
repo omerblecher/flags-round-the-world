@@ -18,9 +18,14 @@ const double _kMinScreenDiagonal = 40.0;
 /// 2. Bbox-expansion candidates: countries whose scale-aware expanded bbox
 ///    contains the point (catches drops near tiny/degenerate countries).
 /// 3. Fallback: expanded bbox for ALL countries (catches ocean drops near coasts).
-/// 4. Tiebreaker: closest centroid to the drop point.
-///    — This correctly handles all overlap cases: degenerate countries at low
-///      zoom, border drops, and island nations in open ocean.
+/// 4. Tiebreaker: closest *effective centroid* to the drop point.
+///    — For candidates with an exact path match, the effective centroid is the
+///      bbox centre of the MATCHING POLYGON, not the country centroid.  This
+///      correctly handles multi-polygon countries (e.g. Malaysia: country
+///      centroid is in Borneo, but a drop on the Peninsula should match
+///      Malaysia, not Indonesia whose Sumatra bbox overlaps the region).
+///    — For bbox-only candidates (degenerate micro-states), the country
+///      centroid is used as before.
 String? hitTest(Offset scenePoint, List<CountryData> countries,
     {double scale = 1.0}) {
   final minSceneDiag = _kMinScreenDiagonal / scale;
@@ -40,21 +45,31 @@ String? hitTest(Offset scenePoint, List<CountryData> countries,
   if (pool.isEmpty) return null;
   if (pool.length == 1) return pool.first.isoCode;
 
-  // 4. Tiebreaker: closest centroid wins.
-  //    Rationale: the country whose centroid is nearest to the drop point is
-  //    the most "intended" target, regardless of whether the hit came via exact
-  //    path or expanded bbox. This correctly handles:
-  //    - Degenerate countries whose 222×222-scene-unit expanded bboxes (at 0.18x
-  //      zoom) would otherwise swallow the centroids of neighbouring countries.
-  //    - Micro-states (San Marino inside Italy's path) — centroid distance 0.
-  //    - Borders — nearest centroid is the more specific country.
+  // 4. Tiebreaker: closest effective centroid wins.
   pool.sort((a, b) {
-    final aDist = (a.centroid - scenePoint).distanceSquared;
-    final bDist = (b.centroid - scenePoint).distanceSquared;
+    final aDist =
+        (_effectiveCentroid(a, scenePoint) - scenePoint).distanceSquared;
+    final bDist =
+        (_effectiveCentroid(b, scenePoint) - scenePoint).distanceSquared;
     return aDist.compareTo(bDist);
   });
 
   return pool.first.isoCode;
+}
+
+/// For countries that have an exact path containing [point], returns the
+/// centre of that polygon's bounding box.  This is a much better proxy for
+/// "which country did the user intend" than the country-level centroid when
+/// the country has non-contiguous territories (Malaysia, US, etc.).
+/// Falls back to [country.centroid] when no path contains the point (i.e.
+/// the candidate was added via expanded-bbox expansion).
+Offset _effectiveCentroid(CountryData country, Offset point) {
+  for (final path in country.paths) {
+    if (path.contains(point)) {
+      return path.getBounds().center;
+    }
+  }
+  return country.centroid;
 }
 
 bool _primaryContains(CountryData country, Offset point, double minSceneDiag) {

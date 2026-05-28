@@ -13,6 +13,11 @@ class FlagTray extends StatefulWidget {
     required this.cardKey,
   });
 
+  // The point within the feedback widget that sits at the pointer during drag.
+  // DragTargetDetails.offset = pointer_global − kPinAnchor, so callers must
+  // add this back to recover the actual drop coordinate.
+  static const kPinAnchor = Offset(45, 70);
+
   @override
   State<FlagTray> createState() => FlagTrayState();
 }
@@ -40,7 +45,6 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
     super.dispose();
   }
 
-  /// Plays the bounce-back animation (called when a wrong drop occurs).
   void triggerBounce() {
     _bounceController.forward().then((_) => _bounceController.reverse());
   }
@@ -66,15 +70,57 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
   Widget _buildDraggableCard() {
     return Draggable<String>(
       data: widget.currentIsoCode,
-      feedback: Material(elevation: 4, child: _card()),
-      childWhenDragging: Opacity(opacity: 0.3, child: _card()),
-      child: _card(),
+      // Anchor the pin tip (bottom-centre of feedback) to the pointer so the
+      // user drops on the country with the visible tip, not a card corner.
+      dragAnchorStrategy: _pinAnchorStrategy,
+      feedback: _buildFeedback(),
+      // GlobalKey is only on `child` — feedback and childWhenDragging must NOT
+      // share it, or Flutter throws a duplicate-GlobalKey error during the drag.
+      childWhenDragging: Opacity(opacity: 0.3, child: _cardShell()),
+      child: _cardShell(key: widget.cardKey),
     );
   }
 
-  Widget _card() {
+  // Anchor point = tip of the pin triangle = kPinAnchor within the feedback.
+  // Width 90 → centre x = 45; card height 60 + triangle height 10 → tip y = 70.
+  static Offset _pinAnchorStrategy(
+    Draggable<Object> draggable,
+    BuildContext context,
+    Offset position,
+  ) =>
+      FlagTray.kPinAnchor;
+
+  Widget _buildFeedback() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Material(
+          elevation: 6,
+          borderRadius: BorderRadius.circular(8),
+          child: _cardShell(),
+        ),
+        // Pin tip — the actual drop-registration point.
+        // The player aligns this triangle with the target country.
+        ClipPath(
+          clipper: const _DownTriangle(),
+          child: Container(
+            width: 20,
+            height: 10,
+            color: const Color(0xFFFF6600),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Card shell — optionally keyed.  Content is always the same.
+  // Separating key from content prevents the GlobalKey from appearing in
+  // both the Overlay (feedback) and the widget tree (childWhenDragging)
+  // simultaneously.
+  Widget _cardShell({Key? key}) {
     return Container(
-      key: widget.cardKey,
+      key: key,
       width: 90,
       height: 60,
       decoration: BoxDecoration(
@@ -108,4 +154,19 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
       ),
     );
   }
+}
+
+// Downward-pointing triangle clipper for the pin tip.
+class _DownTriangle extends CustomClipper<Path> {
+  const _DownTriangle();
+
+  @override
+  Path getClip(Size size) => Path()
+    ..moveTo(0, 0)
+    ..lineTo(size.width, 0)
+    ..lineTo(size.width / 2, size.height)
+    ..close();
+
+  @override
+  bool shouldReclip(_DownTriangle old) => false;
 }

@@ -174,7 +174,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final Matrix4 m = _controller.value.clone();
     final double currentScale = m.getMaxScaleOnAxis();
-    final double newScale = (currentScale * factor).clamp(0.08, 8.0);
+    final double newScale = (currentScale * factor).clamp(0.08, 32.0);
     final double actualFactor = newScale / currentScale;
     if ((actualFactor - 1.0).abs() < 1e-6) return;
 
@@ -218,7 +218,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Correct-drop fly-to-centroid animation.
   // ---------------------------------------------------------------------------
 
-  void _animateCorrectDrop(String isoCode) {
+  void _animateCorrectDrop(String isoCode, {double copyOffsetX = 0}) {
     // Get start position from the tray card.
     final trayBox =
         _trayCardKey.currentContext?.findRenderObject() as RenderBox?;
@@ -229,12 +229,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final startOffset = trayBox.localToGlobal(Offset.zero);
 
     // Get end position (country centroid in screen coords).
+    // Use copyOffsetX so the animation flies to the copy the user dropped on,
+    // not back to the canonical (possibly off-screen) copy.
     final country = _countryIndex[isoCode];
     if (country == null) {
       _advanceToNextFlag();
       return;
     }
-    final endOffset = _centroidToScreen(country.centroid);
+    final sceneCentroid =
+        Offset(country.centroid.dx + copyOffsetX, country.centroid.dy);
+    final endOffset = _centroidToScreen(sceneCentroid);
 
     final animController = AnimationController(
       vsync: this,
@@ -286,7 +290,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Drop handler — correct and incorrect paths.
   // ---------------------------------------------------------------------------
 
-  void _handleDrop(String? hitIso, bool isCorrect) {
+  void _handleDrop(String? hitIso, bool isCorrect, {double copyOffsetX = 0}) {
     if (isCorrect && hitIso != null) {
       ref
           .read(gameSessionProvider.notifier)
@@ -294,7 +298,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       HapticFeedback.lightImpact();
       ref.read(audioServiceProvider).playCorrect();
       setState(() => _hoveredIso = null);
-      _animateCorrectDrop(hitIso);
+      _animateCorrectDrop(hitIso, copyOffsetX: copyOffsetX);
     } else {
       ref.read(gameSessionProvider.notifier).recordDrop(
             hitIso ?? _currentIsoCode,
@@ -340,9 +344,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 transformationController: _controller,
                 constrained: false,
                 minScale: 0.08,
-                maxScale: 16.0,
+                maxScale: 32.0,
                 child: SizedBox(
-                  width: 2000,
+                  // Double width so the world wraps: after Australia the user
+                  // can keep panning right to reach the Americas.
+                  width: 4000,
                   height: 1000,
                   child: Stack(
                     children: [
@@ -354,7 +360,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             countries: countries,
                             matchedIsoCodes: _matchedIsoCodes,
                           ),
-                          size: const Size(2000, 1000),
+                          size: const Size(4000, 1000),
                         ),
                       ),
                       // Layer 2: dynamic hover highlight + target indicator
@@ -369,16 +375,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 : _currentIsoCode,
                             viewScale: _currentScale,
                           ),
-                          size: const Size(2000, 1000),
+                          size: const Size(4000, 1000),
                         ),
                       ),
                       // Layer 3: DragTarget — receives flags dragged over the map.
                       DragTarget<String>(
                         builder: (ctx, _, __) => const SizedBox.expand(),
                         onWillAcceptWithDetails: (details) {
+                          // details.offset = pointer − FlagTray.kPinAnchor;
+                          // add the anchor back to get the actual pin-tip position.
+                          final rawScene = _toSceneFromGlobal(
+                              details.offset + FlagTray.kPinAnchor);
+                          if (rawScene == null) return true;
+                          // Normalise to canonical 0-2000 range so hit detection
+                          // works identically on the wrapped right copy.
                           final scenePoint =
-                              _toSceneFromGlobal(details.offset);
-                          if (scenePoint == null) return true;
+                              Offset(rawScene.dx % 2000, rawScene.dy);
                           final scale =
                               _controller.value.getMaxScaleOnAxis();
                           final hitIso = hitTest(
@@ -386,13 +398,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             _countries,
                             scale: scale,
                           );
-                          setState(() => _hoveredIso = hitIso);
+                          // Only glow the current target country during hover.
+                          // Highlighting non-target countries (e.g. Venezuela
+                          // while dragging Grenada through its territory) is
+                          // confusing — the gold colour should mean "right place."
+                          setState(() => _hoveredIso =
+                              hitIso == _currentIsoCode ? hitIso : null);
                           return true;
                         },
                         onAcceptWithDetails: (details) {
+                          final rawScene = _toSceneFromGlobal(
+                              details.offset + FlagTray.kPinAnchor);
+                          if (rawScene == null) return;
+                          // Which world copy the pin landed in (0 = canonical,
+                          // 2000 = right copy, etc.).  Used to fly the animation
+                          // to the correct on-screen position.
+                          final copyOffsetX =
+                              (rawScene.dx / 2000).floor() * 2000.0;
                           final scenePoint =
-                              _toSceneFromGlobal(details.offset);
-                          if (scenePoint == null) return;
+                              Offset(rawScene.dx % 2000, rawScene.dy);
                           final scale =
                               _controller.value.getMaxScaleOnAxis();
                           final hitIso = hitTest(
@@ -401,7 +425,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             scale: scale,
                           );
                           final isCorrect = hitIso == _currentIsoCode;
-                          _handleDrop(hitIso, isCorrect);
+                          _handleDrop(hitIso, isCorrect,
+                              copyOffsetX: copyOffsetX);
                         },
                         onLeave: (_) => setState(() => _hoveredIso = null),
                       ),
