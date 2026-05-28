@@ -74,8 +74,10 @@ Plans:
 **Wave 1**
 - [ ] 02-01-PLAN.md — Test stubs (RED state), domain type contracts, Ticker abstraction, repository interfaces + impls
 
-**Wave 2** *(both plans blocked on Wave 1 completion — run in parallel)*
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 02-02-PLAN.md — GameSessionNotifier: full state machine, scoring, TDD red→green→refactor
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 02-03-PLAN.md — Phase-end integration verification + human checkpoint
 
 Cross-cutting constraints:

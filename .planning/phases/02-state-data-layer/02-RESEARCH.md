@@ -716,22 +716,21 @@ test('SC4: GameStateRepository.save called once per correct drop', () async {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Countdown phase: does the HUD need to read countdown seconds?**
    - What we know: D-06 says the countdown value is "notifier-internal" and "Phase 3 can read elapsed ticks during the countdown phase if it needs to display it."
    - What's unclear: Whether Phase 3 will need a public getter like `int get countdownSecondsRemaining` on the notifier, or whether `GameSession.elapsed` during countdown phase is sufficient.
-   - Recommendation: Expose `int get countdownSecondsRemaining` as a public getter on `GameSessionNotifier` (not on the model) so Phase 3 can optionally read it without a model change.
+   - **Decision:** Expose `int get countdownSecondsRemaining` as a public getter on `GameSessionNotifier` (not on the model). Implemented in Plan 02-02.
 
 2. **GameStateRepository serialization of GamePhase and GameMode enums**
    - What we know: D-specific guidance says to serialize to a flat JSON map with key `phase`.
    - What's unclear: Whether to store the enum name (string) or ordinal (int). String is more robust to reordering.
-   - Recommendation: Store as `phase.name` (string) and parse back with `GamePhase.values.byName(json['phase'])`. [ASSUMED]
+   - **Decision:** Store as `phase.name` (string) and parse back with `GamePhase.values.byName(json['phase'])`. Implemented in Plan 02-01 Task 2.
 
 3. **`completeGame()` responsibility: who calls it?**
-   - What we know: Phase 2 must have `completed` state (SC1). The completion trigger (all 195 flags matched) is Phase 3's drop-loop concern.
-   - What's unclear: Should `recordDrop()` auto-call `completeGame()` when `_remainingIsoCodes.isEmpty`, or should Phase 3 call it explicitly?
-   - Recommendation: `recordDrop()` should auto-complete when all flags are matched. This keeps the state machine self-contained and testable in Phase 2 without widgets.
+   - What we know: Phase 2 must have `completed` state (SC1). The completion trigger (all flags matched) requires knowing the flag pool, which is a Phase 3 concern — Phase 3 builds the CountryData list and manages drag-drop sequencing.
+   - **Decision:** Phase 3 is responsible for calling `completeGame()` when the last correct flag is placed. `recordDrop()` in Phase 2 does not auto-complete — it has no knowledge of the flag pool size. Phase 2 unit tests call `completeGame()` explicitly (SC1). This keeps the Phase 2 state machine dependency-free from CountryDataService.
 
 ---
 
