@@ -72,7 +72,7 @@ Cross-cutting constraints:
 Plans:
 
 **Wave 1**
-- [ ] 02-01-PLAN.md — Test stubs (RED state), domain type contracts, Ticker abstraction, repository interfaces + impls
+- [x] 02-01-PLAN.md — Test stubs (RED state), domain type contracts, Ticker abstraction, repository interfaces + impls
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 02-02-PLAN.md — GameSessionNotifier: full state machine, scoring, TDD red→green→refactor
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
-| 2. State & Data Layer | 0/3 | Not started | - |
+| 2. State & Data Layer | 1/3 | In progress | - |
 | 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |

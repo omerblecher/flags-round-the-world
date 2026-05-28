@@ -16,9 +16,9 @@ progress:
 
 ## Current Status
 
-**Phase:** 2 — PLANNED. Ready to execute (3 plans, 3 waves).
+**Phase:** 2 — IN PROGRESS. Executing (1/3 plans complete).
 **Last updated:** 2026-05-28
-**Resume file:** .planning/phases/02-state-data-layer/02-01-PLAN.md
+**Resume file:** .planning/phases/02-state-data-layer/02-02-PLAN.md
 
 ## Project Reference
 
