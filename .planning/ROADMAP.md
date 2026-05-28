@@ -78,7 +78,7 @@ Plans:
 - [x] 02-02-PLAN.md — GameSessionNotifier: full state machine, scoring, TDD red→green→refactor
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 02-03-PLAN.md — Phase-end integration verification + human checkpoint
+- [x] 02-03-PLAN.md — Phase-end integration verification + human checkpoint
 
 Cross-cutting constraints:
 - GameSessionNotifier must have zero imports from features/ads/ (enforced by ads_isolation_test.dart)
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
-| 2. State & Data Layer | 2/3 | In progress | - |
+| 2. State & Data Layer | 3/3 | In progress | - |
 | 3. Map Rendering & Drag-Drop | 0/? | Not started | - |
 | 4. Game Modes & Scoring | 0/? | Not started | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |
