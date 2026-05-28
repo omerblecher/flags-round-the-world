@@ -72,6 +72,29 @@ void main() {
       expect(result, equals('LU'));
     });
 
+    test('GAME-02: micro-state expanded bbox included in primary pass (MK-class fix)', () {
+      // Micro-state: tiny 3×3 path, diagonal ≈ 4.24 < 32 → expanded bbox kicks in.
+      final mk = _makeCountry(
+        iso: 'MK',
+        pathRect: Rect.fromLTWH(100, 100, 3, 3),
+        centroid: const Offset(101.5, 101.5),
+      );
+
+      // Large neighbour whose exact path ALSO contains the drop point.
+      final large = _makeCountry(
+        iso: 'GR',
+        pathRect: Rect.fromLTWH(50, 50, 200, 200),
+        centroid: const Offset(150, 150),
+      );
+
+      // (110, 110) is outside MK's 3×3 exact path but inside its expanded
+      // ~22-unit bbox, AND inside GR's large exact path.
+      // With _primaryContains, MK joins the primary candidates via expanded bbox.
+      // Smallest-area tiebreaker prefers MK (area=9) over GR (area=40000).
+      final result = hitTest(const Offset(110, 110), [mk, large]);
+      expect(result, equals('MK'));
+    });
+
     test('GAME-02: smallest-bbox tiebreaker selects more specific country on border', () {
       // SM: tiny 2×2 path — both path and expanded bbox contain (201, 201).
       final sm = _makeCountry(

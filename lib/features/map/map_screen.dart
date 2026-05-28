@@ -288,7 +288,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 transformationController: _controller,
                 constrained: false,
                 minScale: 0.08,
-                maxScale: 8.0,
+                maxScale: 16.0,
                 child: SizedBox(
                   width: 2000,
                   height: 1000,

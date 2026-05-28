@@ -66,7 +66,7 @@ class WorldMapPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: const TextStyle(
-          fontSize: 10.0,
+          fontSize: 7.0,
           color: _labelColor,
           shadows: [
             Shadow(
