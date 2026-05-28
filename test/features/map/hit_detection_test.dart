@@ -30,6 +30,28 @@ CountryData _makeCountry({
   );
 }
 
+CountryData _makeDegenerate({
+  required String iso,
+  required Rect pathRect,
+  required Offset centroid,
+}) {
+  final path = Path()..addRect(pathRect);
+  final bbox = BoundingBox(
+    x: pathRect.left,
+    y: pathRect.top,
+    w: pathRect.width,
+    h: pathRect.height,
+  );
+  return CountryData(
+    isoCode: iso,
+    pathStrings: const [],
+    paths: [path],
+    boundingBox: bbox,
+    centroid: centroid,
+    isDegenerate: true,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -114,6 +136,32 @@ void main() {
       // Both match via primary check; SM has smaller bbox area (4 vs 40 000).
       final result = hitTest(const Offset(201, 201), [sm, it]);
       expect(result, equals('SM'));
+    });
+
+    test('GAME-02: degenerate micro-state wins at medium zoom when drop is just '
+        'outside its rect but inside neighbour path (Singapore/Malaysia scenario)', () {
+      // SG: 8.33×8.33 degenerate synthetic rect — diagonal ≈ 11.78 scene units.
+      const sgRect = Rect.fromLTWH(1572.5, 488.61, 8.33, 8.33);
+      final sg = _makeDegenerate(
+        iso: 'sg',
+        pathRect: sgRect,
+        centroid: const Offset(1576.67, 492.78),
+      );
+
+      // MY: large rect whose path overlaps Singapore's area (Peninsular Malaysia).
+      final my = _makeCountry(
+        iso: 'my',
+        pathRect: const Rect.fromLTWH(1556.0, 461.5, 106.0, 34.2),
+        centroid: const Offset(1636.15, 480.38),
+      );
+
+      // Drop 3 units north of SG rect top (y=488.61 → y=485.61).
+      // At scale=3: minSceneDiag=13.3 < diagonal=11.78 would normally skip
+      // expansion, leaving SG out of candidates. The degenerate fix uses
+      // effectiveMin = diagonal*2 = 23.56 → SG is a candidate and wins.
+      const dropPoint = Offset(1576.67, 485.61);
+      final result = hitTest(dropPoint, [sg, my], scale: 3.0);
+      expect(result, equals('sg'));
     });
   });
 }

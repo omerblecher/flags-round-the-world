@@ -1,4 +1,4 @@
-import 'dart:math' show sqrt;
+import 'dart:math' show max, sqrt;
 import 'dart:ui' show Offset, Rect;
 
 import 'package:flags_around_the_world/core/models/country_data.dart';
@@ -72,8 +72,16 @@ Rect _expandedBbox(CountryData country, double minSceneDiag) {
       height: minSceneDiag,
     );
   }
-  if (diagonal >= minSceneDiag) return rect;
-  final scaleFactor = minSceneDiag / diagonal;
+  // Degenerate countries (synthetic bbox rectangles placed by the SVG pipeline
+  // for micro-states like Singapore) have a neighbouring country's path that
+  // overlaps their tiny rect.  A drop just outside the rect must still register
+  // — e.g. Malaysia's peninsular path contains Singapore's location.
+  // Using max(minSceneDiag, diagonal×2) gives a consistent expansion zone
+  // (≈ one rect-width of padding in each direction) at any zoom level.
+  final effectiveMin =
+      country.isDegenerate ? max(minSceneDiag, diagonal * 2.0) : minSceneDiag;
+  if (diagonal >= effectiveMin) return rect;
+  final scaleFactor = effectiveMin / diagonal;
   return Rect.fromCenter(
     center: country.centroid,
     width: rect.width * scaleFactor,
