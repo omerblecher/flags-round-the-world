@@ -65,10 +65,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Monetization & Compliance
 
-- [ ] **ADS-01**: Banner ads are shown on non-gameplay screens (home, mode selection, result screen); never on the pause screen
-- [ ] **ADS-02**: Interstitial ads are shown only at natural session break points (game-complete screen); never mid-round or on app open before first interaction
-- [ ] **ADS-03**: Rewarded interstitial ads are offered for hint refills after the 2 free session hints are exhausted
-- [ ] **ADS-04**: App Open ads are shown on the splash/loading screen, displayed only after the user is able to interact with the app
+- [x] **ADS-01**: Banner ads are shown on non-gameplay screens (home, mode selection, result screen); never on the pause screen
+- [x] **ADS-02**: Interstitial ads are shown only at natural session break points (game-complete screen); never mid-round or on app open before first interaction
+- [x] **ADS-03**: Rewarded interstitial ads are offered for hint refills after the 2 free session hints are exhausted
+- [x] **ADS-04**: App Open ads are shown on the splash/loading screen, displayed only after the user is able to interact with the app
 - [ ] **ADS-05**: AdMob SDK initialized with `tagForChildDirectedTreatment(true)`, `tagForUnderAgeOfConsent(true)`, `maxAdContentRating(G)` — set before `MobileAds.initialize()`
 - [ ] **ADS-06**: AppLovin MAX SDK initialized with its own child-directed treatment flag at startup
 - [ ] **ADS-07**: Unity Ads SDK initialized with its own child-directed/COPPA flag at startup
@@ -192,10 +192,10 @@ Deferred to future release. Architecturally supported but not in v1 roadmap.
 | SHAR-04 | Phase 5: Session Polish & Accessibility | Pending |
 | COMP-02 | Phase 5: Session Polish & Accessibility | Pending |
 | COMP-04 | Phase 5: Session Polish & Accessibility | Pending |
-| ADS-01 | Phase 6: AdMob & COPPA Audit | Pending |
-| ADS-02 | Phase 6: AdMob & COPPA Audit | Pending |
-| ADS-03 | Phase 6: AdMob & COPPA Audit | Pending |
-| ADS-04 | Phase 6: AdMob & COPPA Audit | Pending |
+| ADS-01 | Phase 6: AdMob & COPPA Audit | Complete |
+| ADS-02 | Phase 6: AdMob & COPPA Audit | Complete |
+| ADS-03 | Phase 6: AdMob & COPPA Audit | Complete |
+| ADS-04 | Phase 6: AdMob & COPPA Audit | Complete |
 | ADS-05 | Phase 6: AdMob & COPPA Audit | Pending |
 | ADS-06 | Phase 6: AdMob & COPPA Audit | Pending |
 | ADS-07 | Phase 6: AdMob & COPPA Audit | Pending |

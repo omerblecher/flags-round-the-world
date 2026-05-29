@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Foundation** - Asset pipeline, Dart domain models, i18n infrastructure, and offline/compliance baseline
 - [x] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
 - [x] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
-- [x] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT (completed 2026-05-29)
+- [x] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT (completed 2026-05-29)
 - [x] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
 - [ ] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
 
@@ -206,10 +206,33 @@ Cross-cutting constraints:
   1. Banner ads appear on the home screen, mode-selection screen, and result screen; no banner ad appears on the pause screen or during active gameplay.
   2. An interstitial ad fires at the game-complete screen (natural break point) and never during a round or on app open before the user has had a chance to interact.
   3. The rewarded interstitial ad flow triggers when hints are exhausted; a user who watches the full ad receives a hint refill; a user who skips or dismisses receives nothing.
-  4. The App Open ad displays on the splash/loading screen only after the app is ready for user interaction (not blocking the launch).
-  5. A Charles Proxy or mitmproxy audit of all ad network traffic confirms zero outbound requests containing `gaid`, `idfa`, `advertising_id`, or any persistent device identifier from AdMob, AppLovin, Unity Ads, or Meta Audience Network (if included).
-  6. `tagForChildDirectedTreatment(true)`, `tagForUnderAgeOfConsent(true)`, and `maxAdContentRating(G)` are set and verified in code before `MobileAds.initialize()` is called; each mediation SDK has its own child-directed flag confirmed in its initialization block; `firebase_core` does not appear anywhere in `pubspec.yaml` or `pubspec.lock`.
-**Plans**: TBD
+  4. The App Open ad displays on app resume from background, after the user has already interacted with the app; suppressed during active gameplay.
+  5. A Charles Proxy or mitmproxy audit of all ad network traffic confirms zero outbound requests containing `gaid`, `idfa`, `advertising_id`, or any persistent device identifier from AdMob, Unity Ads, ironSource, or InMobi.
+  6. `tagForChildDirectedTreatment(true)` and `maxAdContentRating(G)` are set before `MobileAds.initialize()` is called; Unity Ads and ironSource mediation COPPA flags set before initialize(); AppLovin gated behind `kAppLovinEnabled = false`; `firebase_core` absent from `pubspec.yaml` and `pubspec.lock`.
+**Plans**: 4 plans
+
+Plans:
+
+**Wave 1** *(no dependencies — runs first)*
+- [x] 06-01-PLAN.md — pubspec.yaml packages + ironSource Maven repo + AndroidManifest AdMob App ID + network_security_config.xml + ad_constants.dart + initializeAds() in main.dart + RED test stubs
+
+**Wave 2** *(blocked on Wave 1; both plans run in parallel — no file conflicts)*
+- [x] 06-02-PLAN.md — Redesign AdService interface + AdMobAdService implementation + StubAdService in own file + provider swap to AdMobAdService
+- [x] 06-03-PLAN.md — app.dart ConsumerStatefulWidget + AppStateEventNotifier App Open observer + banner on HomeScreen + banner + interstitial on CompletionScreen + rewarded ad in MapScreen hint-exhausted flow + GameSessionNotifier.refillHints()
+
+**Wave 3** *(blocked on Wave 2; has human proxy audit checkpoint)*
+- [ ] 06-04-PLAN.md — GREEN tests (all RED stubs), full suite run, manifest AD_ID check, firebase_core absence check, proxy audit checkpoint (5-point COPPA checklist), 10-row ADS requirements sign-off
+
+Cross-cutting constraints:
+- ads_isolation_test.dart must remain GREEN throughout (no features/ads/ imports in game/map/core)
+- Zero google_mobile_ads imports outside lib/core/ads/ — walled-garden boundary absolute
+- COPPA init order: updateRequestConfiguration() -> mediation SDK flags -> MobileAds.initialize() -> preloadAll()
+- kAppLovinEnabled = false — do not enable until AppLovin re-enters Families Self-Certified Ads SDK Program
+- showInterstitialAd() called in addPostFrameCallback inside initState — never in build()
+- AppStateEventNotifier (not raw WidgetsBindingObserver) for App Open lifecycle
+- Banner uses AdaptiveBanner via AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize()
+- networkSecurityConfig uses <debug-overrides> only — safe in production builds
+- All test IDs used in Phase 6; production IDs swapped before Play Store submission
 
 ## Progress
 
@@ -223,4 +246,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Map Rendering & Drag-Drop | 0/5 | Planned | - |
 | 4. Game Modes & Scoring | 5/5 | Complete   | 2026-05-29 |
 | 5. Session Polish & Accessibility | 6/6 | Complete | 2026-05-29 |
-| 6. AdMob & COPPA Audit | 0/? | Not started | - |
+| 6. AdMob & COPPA Audit | 3/4 | In Progress|  |
