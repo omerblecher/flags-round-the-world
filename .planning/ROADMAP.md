@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Foundation** - Asset pipeline, Dart domain models, i18n infrastructure, and offline/compliance baseline
 - [x] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
 - [x] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
-- [ ] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT
+- [x] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT (completed 2026-05-29)
 - [ ] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
 - [ ] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
 
@@ -140,17 +140,17 @@ Cross-cutting constraints:
 Plans:
 
 **Wave 1**
-- [ ] 04-01-PLAN.md — ARB strings, GameSessionNotifier.useHint(), RED test stubs
+- [x] 04-01-PLAN.md — ARB strings, GameSessionNotifier.useHint(), RED test stubs
 
 **Wave 2** *(runs parallel — no shared file conflicts)*
-- [ ] 04-02-PLAN.md — GoRouter + HomeScreen + MapScreen mode param
-- [ ] 04-03-PLAN.md — WorldMapPainter showLabels/countryNames, FlagTray showName/hint button, flag_sequence.dart, grand_master_order.json, providers
+- [x] 04-02-PLAN.md — GoRouter + HomeScreen + MapScreen mode param
+- [x] 04-03-PLAN.md — WorldMapPainter showLabels/countryNames, FlagTray showName/hint button, flag_sequence.dart, grand_master_order.json, providers
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 04-04-PLAN.md — Ad types to core/ads/, GameHud widget, HighlightPainter hintIso, MapScreen full wiring
+- [x] 04-04-PLAN.md — Ad types to core/ads/, GameHud widget, HighlightPainter hintIso, MapScreen full wiring
 
 **Wave 4** *(blocked on Wave 3 — has human checkpoint)*
-- [ ] 04-05-PLAN.md — CompletionScreen rewrite (stars + PB overlay), GREEN test stubs, human verification checkpoint
+- [x] 04-05-PLAN.md — CompletionScreen rewrite (stars + PB overlay), GREEN test stubs, human verification checkpoint
 
 Cross-cutting constraints:
 - ads_isolation_test.dart must remain GREEN throughout — MapScreen imports from lib/core/ads/ not lib/features/ads/
@@ -199,6 +199,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation | 2/6 | In progress | - |
 | 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
 | 3. Map Rendering & Drag-Drop | 0/5 | Planned | - |
-| 4. Game Modes & Scoring | 0/5 | Planned | - |
+| 4. Game Modes & Scoring | 5/5 | Complete   | 2026-05-29 |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |
 | 6. AdMob & COPPA Audit | 0/? | Not started | - |
