@@ -57,5 +57,95 @@
   "completionPlayAgain": "Jugar de nuevo",
   "@completionPlayAgain": {
     "description": "Button label to restart the game from the completion screen"
+  },
+  "homeTitle": "Banderas del Mundo",
+  "@homeTitle": {
+    "description": "App title on home screen"
+  },
+  "modeSectionTitle": "Elige tu desafío",
+  "@modeSectionTitle": {
+    "description": "Section heading for game mode selection"
+  },
+  "modeLearnName": "Aprender",
+  "@modeLearnName": {
+    "description": "Name of the Learn game mode"
+  },
+  "modeLearnDescription": "Nombres en el mapa y en la tarjeta",
+  "@modeLearnDescription": {
+    "description": "Description of the Learn game mode"
+  },
+  "modeFlagsMasterName": "Maestro de Banderas",
+  "@modeFlagsMasterName": {
+    "description": "Name of the Flags Master game mode"
+  },
+  "modeFlagsMasterDescription": "Nombre solo bajo la tarjeta",
+  "@modeFlagsMasterDescription": {
+    "description": "Description of the Flags Master game mode"
+  },
+  "modeGeoMasterName": "Maestro Geográfico",
+  "@modeGeoMasterName": {
+    "description": "Name of the Geographical Master game mode"
+  },
+  "modeGeoMasterDescription": "Nombres solo en el mapa",
+  "@modeGeoMasterDescription": {
+    "description": "Description of the Geographical Master game mode"
+  },
+  "modeGrandMasterName": "Gran Maestro",
+  "@modeGrandMasterName": {
+    "description": "Name of the Grand Master game mode"
+  },
+  "modeGrandMasterDescription": "Sin nombres en ningún lado",
+  "@modeGrandMasterDescription": {
+    "description": "Description of the Grand Master game mode"
+  },
+  "homeBestScore": "Récord: {score}",
+  "@homeBestScore": {
+    "description": "Shows the player's personal best score on the home screen",
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNoBestScore": "Récord: —",
+  "@homeNoBestScore": {
+    "description": "Shown on home screen when no personal best score exists"
+  },
+  "hintButton": "Pista ×{count}",
+  "@hintButton": {
+    "description": "Label for the hint button showing remaining hints",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hintOutTitle": "Sin pistas",
+  "@hintOutTitle": {
+    "description": "Title of the dialog shown when the player has no hints remaining"
+  },
+  "hintOutMessage": "¿Ver un anuncio para recargar pistas?",
+  "@hintOutMessage": {
+    "description": "Body of the dialog shown when the player has no hints remaining"
+  },
+  "hintWatchAd": "Ver anuncio",
+  "@hintWatchAd": {
+    "description": "Button label to watch an ad for more hints"
+  },
+  "hintCancel": "Cancelar",
+  "@hintCancel": {
+    "description": "Button label to dismiss the hint-out dialog"
+  },
+  "hintAdFailed": "No hay anuncio disponible ahora.",
+  "@hintAdFailed": {
+    "description": "Message shown when no ad is available to refill hints"
+  },
+  "completionPersonalBest": "¡Nuevo récord personal!",
+  "@completionPersonalBest": {
+    "description": "Banner shown on the completion screen when a new personal best is achieved"
+  },
+  "completionDone": "Listo",
+  "@completionDone": {
+    "description": "Button label to dismiss the game completion screen"
   }
 }
