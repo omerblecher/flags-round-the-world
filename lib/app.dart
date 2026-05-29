@@ -26,9 +26,12 @@ final _router = GoRouter(
     GoRoute(
       path: '/result',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
+        final extra = state.extra;
+        if (extra is! Map<String, dynamic>) return const HomeScreen();
+        final session = extra['session'];
+        if (session is! GameSession) return const HomeScreen();
         return CompletionScreen(
-          session: extra['session'] as GameSession,
+          session: session,
           previousBest: extra['previousBest'] as int?,
         );
       },
