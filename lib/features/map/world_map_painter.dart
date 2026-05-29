@@ -23,14 +23,20 @@ class WorldMapPainter extends CustomPainter {
   const WorldMapPainter({
     required this.countries,
     required this.matchedIsoCodes,
+    this.showLabels = true,
+    this.countryNames = const {},
   });
 
   final List<CountryData> countries;
   final Set<String> matchedIsoCodes;
+  final bool showLabels;
+  final Map<String, String> countryNames;
 
   @override
   bool shouldRepaint(WorldMapPainter old) =>
-      !setEquals(old.matchedIsoCodes, matchedIsoCodes);
+      !setEquals(old.matchedIsoCodes, matchedIsoCodes) ||
+      old.showLabels != showLabels ||
+      !identical(old.countryNames, countryNames);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -76,8 +82,10 @@ class WorldMapPainter extends CustomPainter {
     }
 
     // Centroid labels
-    for (final country in countries) {
-      _drawLabel(canvas, country.isoCode, country.centroid);
+    if (showLabels) {
+      for (final country in countries) {
+        _drawLabel(canvas, countryNames[country.isoCode] ?? country.isoCode, country.centroid);
+      }
     }
   }
 

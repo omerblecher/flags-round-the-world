@@ -5,13 +5,21 @@ class FlagTray extends StatefulWidget {
   final String currentIsoCode;
   final String countryName;
   final GlobalKey cardKey;
+  final bool showName;
+  final int hintsRemaining;
+  final VoidCallback onHintPressed;
 
   const FlagTray({
     super.key,
     required this.currentIsoCode,
     required this.countryName,
     required this.cardKey,
+    this.showName = true,
+    this.hintsRemaining = 2,
+    this.onHintPressed = _noOp,
   });
+
+  static void _noOp() {}
 
   // The point within the feedback widget that sits at the pointer during drag.
   // DragTargetDetails.offset = pointer_global − kPinAnchor, so callers must
@@ -55,14 +63,32 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
       height: 120,
       color: Colors.grey.shade200,
       child: Center(
-        child: AnimatedBuilder(
-          animation: _bounceAnim,
-          builder: (ctx, child) => Transform.translate(
-            offset: _bounceAnim.value,
-            child: child,
-          ),
-          child: _buildDraggableCard(),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHintButton(),
+            const SizedBox(width: 8),
+            AnimatedBuilder(
+              animation: _bounceAnim,
+              builder: (ctx, child) => Transform.translate(
+                offset: _bounceAnim.value,
+                child: child,
+              ),
+              child: _buildDraggableCard(),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHintButton() {
+    return ElevatedButton.icon(
+      onPressed: widget.onHintPressed,
+      icon: const Icon(Icons.lightbulb_outline, size: 18),
+      label: Text('Hint ×${widget.hintsRemaining}'),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
@@ -142,14 +168,15 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              widget.countryName,
-              style: const TextStyle(fontSize: 10),
-              overflow: TextOverflow.ellipsis,
+          if (widget.showName)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                widget.countryName,
+                style: const TextStyle(fontSize: 10),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
         ],
       ),
     );
