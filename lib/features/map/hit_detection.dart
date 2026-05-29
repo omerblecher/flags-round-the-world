@@ -1,4 +1,4 @@
-import 'dart:math' show max, sqrt;
+import 'dart:math' show max, sqrt, pi;
 import 'dart:ui' show Offset, Rect;
 
 import 'package:flags_around_the_world/core/models/country_data.dart';
@@ -7,6 +7,12 @@ import 'package:flags_around_the_world/core/models/country_data.dart';
 // At any zoom level, every country is expanded so its on-screen diagonal
 // reaches at least this many pixels — making it reliably hittable.
 const double _kMinScreenDiagonal = 40.0;
+
+// Minimum on-screen bounding-box area in logical pixels (ACCS-03).
+// Any country whose on-screen bbox area falls below this threshold receives
+// a centroid-based circular expansion guaranteeing a physical 48dp tap target.
+// Value: 48 × 48 = 2304 logical pixels².
+const double _kMinScreenArea = 2304.0;
 
 /// Returns the ISO code of the country that the [scenePoint] falls in,
 /// or `null` if no country matches.
@@ -32,14 +38,14 @@ String? hitTest(Offset scenePoint, List<CountryData> countries,
 
   // 1 & 2. Collect candidates from exact path OR expanded bbox.
   final candidates = countries
-      .where((c) => _primaryContains(c, scenePoint, minSceneDiag))
+      .where((c) => _primaryContains(c, scenePoint, minSceneDiag, scale: scale))
       .toList();
 
   // 3. Fallback to expanded bbox for all countries when nothing hit above.
   final pool = candidates.isNotEmpty
       ? candidates
       : countries
-          .where((c) => _expandedBbox(c, minSceneDiag).contains(scenePoint))
+          .where((c) => _expandedBbox(c, minSceneDiag, scale: scale).contains(scenePoint))
           .toList();
 
   if (pool.isEmpty) return null;
@@ -72,13 +78,27 @@ Offset _effectiveCentroid(CountryData country, Offset point) {
   return country.centroid;
 }
 
-bool _primaryContains(CountryData country, Offset point, double minSceneDiag) {
+bool _primaryContains(CountryData country, Offset point, double minSceneDiag, {double scale = 1.0}) {
   if (country.paths.any((p) => p.contains(point))) return true;
-  return _expandedBbox(country, minSceneDiag).contains(point);
+  return _expandedBbox(country, minSceneDiag, scale: scale).contains(point);
 }
 
-Rect _expandedBbox(CountryData country, double minSceneDiag) {
+Rect _expandedBbox(CountryData country, double minSceneDiag, {double scale = 1.0}) {
   final rect = country.boundingBox.rect;
+
+  // Viewport-area threshold (VIS-02 / ACCS-03): if on-screen bbox area is
+  // smaller than a 48×48dp square, guarantee a circular expansion of that
+  // minimum area regardless of shape or diagonal.
+  final screenArea = rect.width * rect.height * scale * scale;
+  if (screenArea < _kMinScreenArea) {
+    final expansionRadius = sqrt(_kMinScreenArea / pi) / scale;
+    return Rect.fromCenter(
+      center: country.centroid,
+      width: expansionRadius * 2,
+      height: expansionRadius * 2,
+    );
+  }
+
   final diagonal = sqrt(rect.width * rect.width + rect.height * rect.height);
   if (diagonal < 1e-6) {
     return Rect.fromCenter(
