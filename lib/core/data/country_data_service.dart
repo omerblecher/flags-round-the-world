@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/country_data.dart';
 
 class CountryDataService {
@@ -38,3 +40,7 @@ class CountryDataService {
     return base;
   }
 }
+
+final countryNamesProvider = FutureProvider<Map<String, String>>((ref) async {
+  return CountryDataService().loadCountryNames(const Locale('en'));
+});

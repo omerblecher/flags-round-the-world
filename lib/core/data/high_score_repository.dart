@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flags_around_the_world/features/game/game_mode.dart';
 
@@ -29,3 +30,8 @@ class SharedPreferencesHighScoreRepository implements HighScoreRepository {
     }
   }
 }
+
+final highScoreRepositoryProvider = FutureProvider<HighScoreRepository>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return SharedPreferencesHighScoreRepository(prefs);
+});

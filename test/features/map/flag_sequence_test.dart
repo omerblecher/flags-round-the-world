@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flags_around_the_world/core/models/country_data.dart';
-import 'package:flags_around_the_world/features/map/map_screen.dart';
+import 'package:flags_around_the_world/features/map/flag_sequence.dart';
 
 // Helper: build a minimal CountryData with a distinct ISO code.
 CountryData _makeCountry(String isoCode) {
