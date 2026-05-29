@@ -1,3 +1,5 @@
+import 'dart:math' show sqrt;
+
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flags_around_the_world/core/models/country_data.dart';
@@ -17,7 +19,6 @@ const double _kDotRadius = 5.0; // scene units for degenerate-path dot markers
 const _matchedColor = Color(0xFFAAAAAA); // grey for already-matched countries
 const _oceanColor   = Color(0xFFA8D5E8); // light blue background
 const _borderColor  = Color(0xFF555555); // dark country borders
-const _labelColor   = Color(0xFFFFFFFF); // white centroid labels
 
 class WorldMapPainter extends CustomPainter {
   const WorldMapPainter({
@@ -25,18 +26,21 @@ class WorldMapPainter extends CustomPainter {
     required this.matchedIsoCodes,
     this.showLabels = true,
     this.countryNames = const {},
+    this.viewScale = 1.0,
   });
 
   final List<CountryData> countries;
   final Set<String> matchedIsoCodes;
   final bool showLabels;
   final Map<String, String> countryNames;
+  final double viewScale;
 
   @override
   bool shouldRepaint(WorldMapPainter old) =>
       !setEquals(old.matchedIsoCodes, matchedIsoCodes) ||
       old.showLabels != showLabels ||
-      !identical(old.countryNames, countryNames);
+      !identical(old.countryNames, countryNames) ||
+      old.viewScale != viewScale;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -84,19 +88,38 @@ class WorldMapPainter extends CustomPainter {
     // Centroid labels
     if (showLabels) {
       for (final country in countries) {
-        _drawLabel(canvas, countryNames[country.isoCode] ?? country.isoCode, country.centroid);
+        _drawLabel(canvas, countryNames[country.isoCode] ?? country.isoCode, country.centroid, country);
       }
     }
   }
 
-  void _drawLabel(Canvas canvas, String text, Offset centroid) {
+  void _drawLabel(Canvas canvas, String text, Offset centroid, CountryData country) {
+    // Compute bbox diagonal in scene units for opacity decision (D-V01).
+    final r = country.boundingBox.rect;
+    final diagonal = sqrt(r.width * r.width + r.height * r.height);
+
+    // Opacity rules (D-V01):
+    //   micro-state  (diagonal < 30):  fade in above 2.5×
+    //   small country (diagonal < 100): fade in above 1.5×
+    //   large country:                 always 1.0
+    final double opacity;
+    if (diagonal < 30.0) {
+      opacity = ((viewScale - 2.5) / 1.0).clamp(0.0, 1.0);
+    } else if (diagonal < 100.0) {
+      opacity = ((viewScale - 1.5) / 1.0).clamp(0.0, 1.0);
+    } else {
+      opacity = 1.0;
+    }
+    if (opacity <= 0.0) return; // Skip drawing — avoids invisible TextPainter cost
+
+    final labelAlpha = (opacity * 255).round();
     final tp = TextPainter(
       text: TextSpan(
         text: text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 7.0,
-          color: _labelColor,
-          shadows: [
+          color: Color.fromARGB(labelAlpha, 0xFF, 0xFF, 0xFF),
+          shadows: const [
             Shadow(
               color: Color(0xFF000000),
               blurRadius: 2,
