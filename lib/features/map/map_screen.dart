@@ -9,6 +9,7 @@ import 'package:flags_around_the_world/core/audio/audio_service_provider.dart';
 import 'package:flags_around_the_world/core/data/country_data_service.dart';
 import 'package:flags_around_the_world/core/models/country_data.dart';
 import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
+import 'package:flags_around_the_world/features/game/game_mode.dart';
 import 'package:flags_around_the_world/features/map/world_map_painter.dart';
 import 'package:flags_around_the_world/features/map/highlight_painter.dart';
 import 'package:flags_around_the_world/features/map/hit_detection.dart';
@@ -30,7 +31,9 @@ List<String> buildFlagSequence(List<CountryData> countries) {
 }
 
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key});
+  final GameMode mode;
+
+  const MapScreen({super.key, required this.mode});
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -105,8 +108,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (_remainingIsoCodes.isNotEmpty) {
       _currentIsoCode = _remainingIsoCodes.first;
     }
-    // Fit the full 2000×1000 map into the viewport on first data load.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapToScreen());
+    // Fit the map and start the game session with the selected mode.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fitMapToScreen();
+      ref.read(gameSessionProvider.notifier).startGame(widget.mode);
+    });
   }
 
   void _fitMapToScreen() {
