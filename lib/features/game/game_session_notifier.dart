@@ -104,7 +104,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
       _gameStateRepository?.saveSession(current);
     } else {
       final newErrorCount = current.errorCount + 1;
-      final newScore = (_elapsedSeconds ~/ 10) + (newErrorCount * 5);
+      final newScore = (_elapsedSeconds ~/ 10) + (newErrorCount * 5) + _hintPenalty;
       state = AsyncData(current.copyWith(
         errorCount: newErrorCount,
         score: newScore,
