@@ -160,5 +160,207 @@
   "hintTooltip": "Muestra y acerca el país objetivo durante 3 segundos (+5 pts)",
   "@hintTooltip": {
     "description": "Tooltip on the hint button in the flag tray"
+  },
+  "pauseButtonTooltip": "Pausar juego",
+  "@pauseButtonTooltip": {
+    "description": "Tooltip for the pause button in the HUD"
+  },
+  "pauseTitle": "Juego en pausa",
+  "@pauseTitle": {
+    "description": "Title shown on the pause overlay"
+  },
+  "pauseResume": "Continuar",
+  "@pauseResume": {
+    "description": "Button label to resume the game from the pause overlay"
+  },
+  "pauseEndGame": "Terminar juego",
+  "@pauseEndGame": {
+    "description": "Button label to end the game from the pause overlay"
+  },
+  "pauseMuteOn": "Silenciar",
+  "@pauseMuteOn": {
+    "description": "Button label to mute audio from the pause overlay"
+  },
+  "pauseMuteOff": "Activar sonido",
+  "@pauseMuteOff": {
+    "description": "Button label to unmute audio from the pause overlay"
+  },
+  "hudPauseSemanticLabel": "Pausar juego",
+  "@hudPauseSemanticLabel": {
+    "description": "Semantic label for the pause button in the HUD"
+  },
+  "hudMuteSemanticLabel": "Silenciar / activar sonido",
+  "@hudMuteSemanticLabel": {
+    "description": "Semantic label for the mute toggle button in the HUD"
+  },
+  "continueGameTitle": "¿Continuar tu juego?",
+  "@continueGameTitle": {
+    "description": "Title of the dialog asking the player if they want to continue a saved game"
+  },
+  "continueGameScore": "Puntuación: {score}",
+  "@continueGameScore": {
+    "description": "Shows the saved game score in the continue dialog",
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "continueGameTime": "Tiempo: {time}",
+  "@continueGameTime": {
+    "description": "Shows the saved game elapsed time in the continue dialog",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "continueGameFlags": "Banderas colocadas: {matched} de {total}",
+  "@continueGameFlags": {
+    "description": "Shows how many flags have been matched in the saved game",
+    "placeholders": {
+      "matched": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "continueGameMode": "Modo: {mode}",
+  "@continueGameMode": {
+    "description": "Shows the game mode of the saved game in the continue dialog",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "continueButton": "Continuar",
+  "@continueButton": {
+    "description": "Button label to continue a saved game"
+  },
+  "newGameButton": "Nuevo juego",
+  "@newGameButton": {
+    "description": "Button label to discard saved game and start a new game"
+  },
+  "tutorialStep1Title": "Tu bandera",
+  "@tutorialStep1Title": {
+    "description": "Title for tutorial step 1 about the flag card"
+  },
+  "tutorialStep1Body": "Arrastra esta tarjeta al país correspondiente en el mapa",
+  "@tutorialStep1Body": {
+    "description": "Body text for tutorial step 1"
+  },
+  "tutorialStep2Title": "Suéltala",
+  "@tutorialStep2Title": {
+    "description": "Title for tutorial step 2 about dropping the flag"
+  },
+  "tutorialStep2Body": "La punta naranja indica el punto de colocación",
+  "@tutorialStep2Body": {
+    "description": "Body text for tutorial step 2"
+  },
+  "tutorialStep3Title": "Ampliar",
+  "@tutorialStep3Title": {
+    "description": "Title for tutorial step 3 about zooming"
+  },
+  "tutorialStep3Body": "Pellizca o usa los botones para ampliar países pequeños",
+  "@tutorialStep3Body": {
+    "description": "Body text for tutorial step 3"
+  },
+  "tutorialStep4Title": "¿Necesitas ayuda?",
+  "@tutorialStep4Title": {
+    "description": "Title for tutorial step 4 about hints"
+  },
+  "tutorialStep4Body": "Pulsa Pista para ver el país objetivo (+5 puntos)",
+  "@tutorialStep4Body": {
+    "description": "Body text for tutorial step 4"
+  },
+  "tutorialNext": "Siguiente",
+  "@tutorialNext": {
+    "description": "Button label to advance to the next tutorial step"
+  },
+  "tutorialSkip": "Saltar",
+  "@tutorialSkip": {
+    "description": "Button label to skip the tutorial"
+  },
+  "tutorialGotIt": "¡Entendido!",
+  "@tutorialGotIt": {
+    "description": "Button label to dismiss the last tutorial step"
+  },
+  "shareScoreButton": "Compartir puntuación",
+  "@shareScoreButton": {
+    "description": "Button label to share the player's score"
+  },
+  "shareImageHeader": "¡Nueva puntuación más baja en nivel {level}!",
+  "@shareImageHeader": {
+    "description": "Header text overlaid on the shared score image",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "parentalGateTitle": "Control parental",
+  "@parentalGateTitle": {
+    "description": "Title of the parental gate dialog"
+  },
+  "parentalGateQuestion": "{a} × {b} = ?",
+  "@parentalGateQuestion": {
+    "description": "Multiplication problem presented in the parental gate",
+    "placeholders": {
+      "a": {
+        "type": "int"
+      },
+      "b": {
+        "type": "int"
+      }
+    }
+  },
+  "parentalGateHint": "Resuelve el problema para continuar",
+  "@parentalGateHint": {
+    "description": "Hint text below the parental gate question"
+  },
+  "parentalGateWrong": "Incorrecto — inténtalo de nuevo",
+  "@parentalGateWrong": {
+    "description": "Error message shown when the parental gate answer is wrong"
+  },
+  "parentalGateConfirm": "Compartir",
+  "@parentalGateConfirm": {
+    "description": "Confirm button label in the parental gate dialog"
+  },
+  "parentalGateCancel": "Cancelar",
+  "@parentalGateCancel": {
+    "description": "Cancel button label in the parental gate dialog"
+  },
+  "semanticFlagCard": "Tarjeta de bandera de {country}. Arrastra al mapa.",
+  "@semanticFlagCard": {
+    "description": "Semantic label for a draggable flag card",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "semanticHintButton": "Botón de pista, {count} restantes",
+  "@semanticHintButton": {
+    "description": "Semantic label for the hint button showing remaining hints",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "semanticZoomIn": "Acercar",
+  "@semanticZoomIn": {
+    "description": "Semantic label for the zoom in button"
+  },
+  "semanticZoomOut": "Alejar",
+  "@semanticZoomOut": {
+    "description": "Semantic label for the zoom out button"
+  },
+  "privacyPolicyLink": "Política de privacidad",
+  "@privacyPolicyLink": {
+    "description": "Label for the privacy policy link in the home screen footer"
   }
 }
