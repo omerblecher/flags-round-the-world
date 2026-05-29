@@ -172,8 +172,30 @@ Cross-cutting constraints:
   5. TalkBack (Android) or VoiceOver (iOS) correctly announces all interactive elements; all tappable targets measure at least 48dp; the mute toggle is visible in the HUD and persists across app restarts.
   6. Tapping "Share Score" on the victory screen triggers a multi-digit multiplication parental gate; solving it correctly opens the native OS share sheet with a stylized screenshot overlay ("New lowest score in [Level] level!"); failing or cancelling the gate does not open the share sheet.
   7. The app's Play Store listing includes a link to a hosted privacy policy URL; the Android manifest blocks `AD_ID` permission via `tools:remove`; a manual Google Play Families Policy checklist passes with no blocking issues.
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 6 plans
+
+Plans:
+
+**Wave 1**
+- [x] 05-01-PLAN.md — Packages (url_launcher, share_plus) + GameSession.matchedIsoCodes + GameStateRepository.clearSession() + UserPrefsRepository + AudioService.setMuted() + ARB strings + RED test stubs
+
+**Wave 2** *(blocked on Wave 1, parallel)*
+- [x] 05-02-PLAN.md — Canvas & UX fixes: WorldMapPainter viewScale + label culling (VIS-01), hitTest viewport-area threshold (VIS-02)
+- [x] 05-03-PLAN.md — GameHud upgrade (pause + mute, 48dp), HomeScreen session-restore dialog + privacy policy footer, MapScreen restore params, app.dart GoRouter extras
+
+**Wave 3** *(blocked on Wave 2, parallel)*
+- [x] 05-04-PLAN.md — MapScreen full wiring: WidgetsBindingObserver auto-pause, pause overlay, tutorial coach-marks, session restore logic, VIS-03 ColoredBox, FlagTray accessibility
+- [x] 05-05-PLAN.md — CompletionScreen share flow + parental gate + screenshot, AndroidManifest AD_ID block (COMP-04), ACCS-02 verification
+
+**Wave 4** *(blocked on Wave 3 — has human checkpoint)*
+- [ ] 05-06-PLAN.md — GREEN tests (all RED stubs), full suite run, 7-point human verification checkpoint
+
+Cross-cutting constraints:
+- ads_isolation_test.dart must remain GREEN throughout (no lib/features/ads/ imports in game/map/core code)
+- No codegen: manual AsyncNotifier + top-level provider only
+- GameSession.matchedIsoCodes uses optional param (default []) — existing constructors compile unchanged
+- GameStateRepository.clearSession() must be called on: "Start Fresh", force-quit relaunch of completed sessions
+- Tutorial defers startGame() until dismissed — timer must NOT tick during tutorial
 
 ### Phase 6: AdMob & COPPA Audit
 **Goal**: The walled-garden ad layer is fully implemented with all mediation SDKs initialized with child-directed flags; all four ad formats serve correctly; a proxy audit confirms no GAID or device identifier leaks; the app is ready for Google Play Families Program review.
@@ -200,5 +222,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
 | 3. Map Rendering & Drag-Drop | 0/5 | Planned | - |
 | 4. Game Modes & Scoring | 5/5 | Complete   | 2026-05-29 |
-| 5. Session Polish & Accessibility | 0/? | Not started | - |
+| 5. Session Polish & Accessibility | 5/6 | In progress | - |
 | 6. AdMob & COPPA Audit | 0/? | Not started | - |
