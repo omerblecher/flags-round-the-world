@@ -110,6 +110,19 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     }
   }
 
+  /// Consumes one hint from hintsRemaining.
+  ///
+  /// Returns true if a hint was consumed; returns false if hintsRemaining is
+  /// already 0 or state is not available. Never modifies state when returning
+  /// false.
+  bool useHint() {
+    final current = state.value;
+    if (current == null || current.hintsRemaining <= 0) return false;
+    state = AsyncData(current.copyWith(hintsRemaining: current.hintsRemaining - 1));
+    _gameStateRepository?.saveSession(state.value!);
+    return true;
+  }
+
   Future<void> completeGame() async {
     _ticker.stop();
     final current = state.value!;
