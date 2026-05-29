@@ -156,5 +156,9 @@
         "type": "String"
       }
     }
+  },
+  "hintTooltip": "Muestra y acerca el país objetivo durante 3 segundos (+5 pts)",
+  "@hintTooltip": {
+    "description": "Tooltip on the hint button in the flag tray"
   }
 }

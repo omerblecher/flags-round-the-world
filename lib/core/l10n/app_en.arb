@@ -156,5 +156,9 @@
         "type": "String"
       }
     }
+  },
+  "hintTooltip": "Reveals and zooms to the target country for 3 seconds (+5 pts)",
+  "@hintTooltip": {
+    "description": "Tooltip on the hint button in the flag tray"
   }
 }

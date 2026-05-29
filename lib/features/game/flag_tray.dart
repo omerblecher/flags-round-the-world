@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
+
 class FlagTray extends StatefulWidget {
   final String currentIsoCode;
   final String countryName;
@@ -66,7 +68,7 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHintButton(),
+            _buildHintButton(context),
             const SizedBox(width: 8),
             AnimatedBuilder(
               animation: _bounceAnim,
@@ -82,9 +84,9 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
     );
   }
 
-  Widget _buildHintButton() {
+  Widget _buildHintButton(BuildContext context) {
     return Tooltip(
-      message: 'Reveals and zooms to the target country for 3 seconds (+5 pts)',
+      message: AppLocalizations.of(context).hintTooltip,
       child: ElevatedButton.icon(
         onPressed: widget.onHintPressed,
         icon: const Icon(Icons.lightbulb_outline, size: 18),
