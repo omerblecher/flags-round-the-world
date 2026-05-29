@@ -946,19 +946,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final l10n    = AppLocalizations.of(context);
     final mapData = ref.watch(countryDataProvider);
 
-    return mapData.when(
-      loading: () => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 12),
-            Text(l10n.loadingMap),
-          ],
+    return Scaffold(
+      body: mapData.when(
+        loading: () => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 12),
+              Text(l10n.loadingMap),
+            ],
+          ),
         ),
+        error: (_, __) => Center(child: Text(l10n.mapLoadError)),
+        data: _buildMap,
       ),
-      error: (_, __) => Center(child: Text(l10n.mapLoadError)),
-      data: _buildMap,
     );
   }
 }
