@@ -64,6 +64,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // receives distinct object references and can detect the change.
   Set<String> _matchedIsoCodes = {};
   bool _sequenceInitialized = false;
+  bool _mapPaintReady = false;
 
   // ---------- Tray keys -------------------------------------------------------
 
@@ -755,6 +756,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (_countryIndex.isEmpty && countries.isNotEmpty) {
       _countryIndex = {for (final c in countries) c.isoCode: c};
       _countries = countries;
+      // Reveal the map only after the first frame is painted — before that,
+      // the canvas is at 1:1 scale and _fitMapToScreen hasn't run yet.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _mapPaintReady = true);
+      });
     }
     _initSequence(countries);
 
@@ -828,7 +834,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 painter: HighlightPainter(
                                   hoveredIso: _hoveredIso,
                                   countryIndex: _countryIndex,
-                                  targetIsoCode: _currentIsoCode.isEmpty
+                                  // Only show the target outline in Learn mode —
+                                  // harder modes require the player to locate
+                                  // the country without visual hints.
+                                  targetIsoCode: (_currentIsoCode.isEmpty ||
+                                          widget.mode != GameMode.learn)
                                       ? null
                                       : _currentIsoCode,
                                   viewScale: _currentScale,
@@ -973,10 +983,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
+  Widget _buildLoadingScreen(AppLocalizations l10n) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1A237E), Color(0xFFA8D5E8)],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.public, size: 72, color: Colors.white70),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 16),
+            Text(
+              l10n.loadingMap,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n    = AppLocalizations.of(context);
     final mapData = ref.watch(countryDataProvider);
+
+    // The loading screen stays up while JSON is loading AND while the map is
+    // painting its first frame (before _fitMapToScreen runs). This prevents the
+    // 1-2 second window where the canvas is at 1:1 scale and unusable.
+    final showLoading = mapData.isLoading || (mapData.hasValue && !_mapPaintReady);
 
     return PopScope(
       canPop: false,
@@ -984,33 +1026,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
         if (!didPop) _onBackPressed();
       },
       child: Scaffold(
-        body: mapData.when(
-          loading: () => Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1A237E), Color(0xFFA8D5E8)],
-              ),
+        body: Stack(
+          children: [
+            mapData.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => Center(child: Text(l10n.mapLoadError)),
+              data: _buildMap,
             ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.public, size: 72, color: Colors.white70),
-                  const SizedBox(height: 24),
-                  const CircularProgressIndicator(color: Colors.white),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.loadingMap,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          error: (_, __) => Center(child: Text(l10n.mapLoadError)),
-          data: _buildMap,
+            if (showLoading) _buildLoadingScreen(l10n),
+          ],
         ),
       ),
     );

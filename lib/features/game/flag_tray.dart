@@ -76,7 +76,26 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
                 offset: _bounceAnim.value,
                 child: child,
               ),
-              child: _buildDraggableCard(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDraggableCard(context),
+                  if (widget.showName)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: SizedBox(
+                        width: 90,
+                        child: Text(
+                          widget.countryName,
+                          style: const TextStyle(fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
@@ -173,28 +192,14 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
           BoxShadow(blurRadius: 4, offset: Offset(2, 2), color: Color(0x44000000)),
         ],
       ),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-              child: SvgPicture.asset(
-                'assets/flags/${widget.currentIsoCode.toLowerCase()}.svg',
-                fit: BoxFit.cover,
-                width: 90,
-              ),
-            ),
-          ),
-          if (widget.showName)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                widget.countryName,
-                style: const TextStyle(fontSize: 10),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SvgPicture.asset(
+          'assets/flags/${widget.currentIsoCode.toLowerCase()}.svg',
+          fit: BoxFit.contain,
+          width: 90,
+          height: 60,
+        ),
       ),
     );
   }
