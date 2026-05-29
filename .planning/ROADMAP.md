@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Foundation** - Asset pipeline, Dart domain models, i18n infrastructure, and offline/compliance baseline
 - [x] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
 - [x] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
-- [ ] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence ← NEXT
+- [ ] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT
 - [ ] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
 - [ ] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
 
@@ -63,8 +63,8 @@ Cross-cutting constraints:
 **Depends on**: Phase 1
 **Requirements**: SCOR-01, SCOR-02, SCOR-04
 **Success Criteria** (what must be TRUE):
-  1. A unit test drives `GameSessionNotifier` through idle → countdown → playing → paused → completed transitions and asserts each `GamePhase` value is emitted in order.
-  2. A unit test simulates 30 seconds elapsed + 3 incorrect drops and asserts the score is exactly 8 points (3 × 10s intervals = 3 pts + 3 × 5 incorrect = 15 pts → wait, 30s = 3 × 10s = 3 pts, 3 errors × 5 = 15 pts, total 18 pts); the scorer produces the correct golf-style total for any elapsed-time + error-count input.
+  1. A unit test drives `GameSessionNotifier` through idle -> countdown -> playing -> paused -> completed transitions and asserts each `GamePhase` value is emitted in order.
+  2. A unit test simulates 30 seconds elapsed + 3 incorrect drops and asserts the score is exactly 8 points (3 x 10s intervals = 3 pts + 3 x 5 incorrect = 15 pts -> wait, 30s = 3 x 10s = 3 pts, 3 errors x 5 = 15 pts, total 18 pts); the scorer produces the correct golf-style total for any elapsed-time + error-count input.
   3. `HighScoreRepository` writes a new best score to `shared_preferences`, reads it back on a fresh instance, and returns the stored value — verified by a test using a mock `SharedPreferences`.
   4. After simulating a correct flag drop, `GameSessionNotifier` immediately writes current state to storage (not deferred to game-end), confirmed by asserting the mock storage write count equals the correct-drop count.
 **Plans**: 3 plans
@@ -75,7 +75,7 @@ Plans:
 - [x] 02-01-PLAN.md — Test stubs (RED state), domain type contracts, Ticker abstraction, repository interfaces + impls
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [x] 02-02-PLAN.md — GameSessionNotifier: full state machine, scoring, TDD red→green→refactor
+- [x] 02-02-PLAN.md — GameSessionNotifier: full state machine, scoring, TDD red->green->refactor
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [x] 02-03-PLAN.md — Phase-end integration verification + human checkpoint
@@ -87,7 +87,7 @@ Cross-cutting constraints:
 - No new packages: all test infrastructure already in pubspec.yaml
 
 ### Phase 3: Map Rendering & Drag-Drop
-**Goal**: A tester can open the app, see the interactive world map, drag a flag card from the tray, drop it onto a country at any zoom level, and receive correct/incorrect feedback — with hit detection validated at 1×, 2×, and 4× zoom.
+**Goal**: A tester can open the app, see the interactive world map, drag a flag card from the tray, drop it onto a country at any zoom level, and receive correct/incorrect feedback — with hit detection validated at 1x, 2x, and 4x zoom.
 **Mode:** mvp
 **Depends on**: Phase 2
 **Requirements**: MAP-01, MAP-02, MAP-03, MAP-04, MAP-05, GAME-01, GAME-02, GAME-03, GAME-04, GAME-05, GAME-06
@@ -95,7 +95,7 @@ Cross-cutting constraints:
   1. The world map renders all 196 country regions as distinct droppable areas; a tester can visually identify and tap any country without the app freezing or dropping below 30 fps on a mid-range Android device (profiled with `flutter run --profile`).
   2. Pinch-to-zoom, two-finger pan, and on-screen zoom buttons all work smoothly; country name labels remain readable and scale proportionally at every zoom level.
   3. Dragging a flag card over a country visually highlights that country; releasing the card on the correct country triggers a snap animation, audio chime, and haptic pulse; releasing on the wrong country triggers a gentle error visual, distinct audio tone, and short haptic buzz — and the card returns to the tray.
-  4. Drag-drop hit detection resolves correctly at 1×, 2×, and 4× zoom levels (coordinate transform via `TransformationController.toScene()` is verified by a manual test on a physical or emulated device — the known critical risk).
+  4. Drag-drop hit detection resolves correctly at 1x, 2x, and 4x zoom levels (coordinate transform via `TransformationController.toScene()` is verified by a manual test on a physical or emulated device — the known critical risk).
   5. A full session draws all 196 flags in random order one at a time and ends with a completion screen after the last correct match; no flag is ever drawn twice in the same session.
 **Plans**: 5 plans
 
@@ -117,7 +117,7 @@ Plans:
 - [ ] 03-05-PLAN.md — Integration gate: full suite + 60fps profile + SC4 manual zoom verification [HUMAN CHECKPOINT]
 
 Cross-cutting constraints:
-- Coordinate transform: always global → renderBox.globalToLocal() → toScene() — three steps, never skip step 2
+- Coordinate transform: always global -> renderBox.globalToLocal() -> toScene() — three steps, never skip step 2
 - Flag tray OUTSIDE InteractiveViewer; single DragTarget INSIDE — locked after Phase 3
 - Two-layer CustomPainter (WorldMapPainter + HighlightPainter) in separate RepaintBoundary containers
 - GameSessionNotifier zero imports from features/ads/ (ads_isolation_test.dart enforces)
@@ -134,9 +134,30 @@ Cross-cutting constraints:
   2. Grand Master mode presents flags in the pre-defined distinctiveness-ordered sequence (most recognizable first), not in random order.
   3. The top HUD displays a live score, running timer, and a progress bar (flags matched / total) that update in real time throughout gameplay.
   4. After exhausting 2 free hints, a "Watch ad to refill hints" prompt appears; tapping it (with ad stub returning success) restores the hint count; the hint button correctly reveals the target country's location on the map.
-  5. The completion screen displays a 1–3 star rating based on the player's score relative to their personal best; if the player beats their best score, a celebratory personal-best milestone screen is shown before the standard completion screen.
-**Plans**: TBD
-**UI hint**: yes
+  5. The completion screen displays a 1-3 star rating based on the player's score relative to their personal best; if the player beats their best score, a celebratory personal-best milestone screen is shown before the standard completion screen.
+**Plans**: 5 plans
+
+Plans:
+
+**Wave 1**
+- [ ] 04-01-PLAN.md — ARB strings, GameSessionNotifier.useHint(), RED test stubs
+
+**Wave 2** *(runs parallel — no shared file conflicts)*
+- [ ] 04-02-PLAN.md — GoRouter + HomeScreen + MapScreen mode param
+- [ ] 04-03-PLAN.md — WorldMapPainter showLabels/countryNames, FlagTray showName/hint button, flag_sequence.dart, grand_master_order.json, providers
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 04-04-PLAN.md — Ad types to core/ads/, GameHud widget, HighlightPainter hintIso, MapScreen full wiring
+
+**Wave 4** *(blocked on Wave 3 — has human checkpoint)*
+- [ ] 04-05-PLAN.md — CompletionScreen rewrite (stars + PB overlay), GREEN test stubs, human verification checkpoint
+
+Cross-cutting constraints:
+- ads_isolation_test.dart must remain GREEN throughout — MapScreen imports from lib/core/ads/ not lib/features/ads/
+- No codegen: manual AsyncNotifier + top-level provider only
+- Grand Master sequence from assets/data/grand_master_order.json — buildGrandMasterSequence() filters to known ISOs
+- GoRouter already in pubspec.yaml at ^17.2.3 — no pub get needed
+- Star rating is golf-style (lower score is better); D-D01: first game always 3 stars, no PB overlay
 
 ### Phase 5: Session Polish & Accessibility
 **Goal**: Session lifecycle (pause, resume, auto-pause, persistence, tutorial) is complete; the app is fully accessible with correct touch targets and semantic labels; portrait/landscape work correctly; social sharing is gated behind a parental challenge.
@@ -171,13 +192,13 @@ Cross-cutting constraints:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/6 | In progress | - |
 | 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
 | 3. Map Rendering & Drag-Drop | 0/5 | Planned | - |
-| 4. Game Modes & Scoring | 0/? | Not started | - |
+| 4. Game Modes & Scoring | 0/5 | Planned | - |
 | 5. Session Polish & Accessibility | 0/? | Not started | - |
 | 6. AdMob & COPPA Audit | 0/? | Not started | - |
