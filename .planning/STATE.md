@@ -16,9 +16,9 @@ progress:
 
 ## Current Status
 
-**Phase:** 6 — AdMob & COPPA Audit (in progress, plan 01 complete)
+**Phase:** 6 — AdMob & COPPA Audit (in progress, plan 02 complete)
 **Last updated:** 2026-05-29
-**Resume file:** .planning/phases/06-admob-coppa-audit/06-01-SUMMARY.md
+**Resume file:** .planning/phases/06-admob-coppa-audit/06-02-SUMMARY.md
 
 ## Project Reference
 
@@ -46,6 +46,9 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 - 06-01: GmaMediationUnity consent methods are instance (not static) in v1.8.0 — use GmaMediationUnity() instance
 - 06-01: COPPA init ordering enforced: child-directed flags + mediation COPPA flags before MobileAds.instance.initialize()
 - 06-01: kAppLovinEnabled=false gate documents activation path explicitly
+- 06-02: getLargeAnchoredAdaptiveBannerAdSize used (getCurrentOrientation* deprecated in GMA 8.0.0)
+- 06-02: AppOpenAd.load() uses request: param (not adRequest:) in GMA 8.0.0
+- 06-02: AsyncValue.value getter used (.valueOrNull absent from flutter_riverpod 3.3.1)
 - applicationId set to com.otis.brooke.flags.around.the.world (corrected from flutter create default)
 - synthetic-package removed from l10n.yaml (deprecated in Flutter 3.44.0)
 - Minimal app_en.arb created with scaffoldHomeLabel to unblock flutter pub get
@@ -59,3 +62,4 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 | 02 | 02 | 180s | 3 | 2 |
 | 02 | 03 | 120s | 1 | 0 |
 | 06 | 01 | 15m  | 3 | 9 |
+| 06 | 02 | 12m  | 2 | 6 |
