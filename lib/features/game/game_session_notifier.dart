@@ -119,7 +119,9 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
   /// false.
   bool useHint() {
     final current = state.value;
-    if (current == null || current.hintsRemaining <= 0) return false;
+    if (current == null ||
+        current.phase != GamePhase.playing ||
+        current.hintsRemaining <= 0) return false;
     _hintPenalty += 5;
     final newScore = (_elapsedSeconds ~/ 10) + (current.errorCount * 5) + _hintPenalty;
     state = AsyncData(current.copyWith(
