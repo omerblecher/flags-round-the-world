@@ -203,6 +203,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final used = ref.read(gameSessionProvider.notifier).useHint();
     if (!used) return;
 
+    final l10n = AppLocalizations.of(context);
+    final countryNamesAsync = ref.read(countryNamesProvider);
+    final name = countryNamesAsync.value?[_currentIsoCode] ?? _currentIsoCode;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(l10n.hintLocating(name)),
+      duration: const Duration(milliseconds: 1800),
+    ));
+
     setState(() => _hintIso = _currentIsoCode);
     _hintTimer?.cancel();
     _hintTimer = Timer(const Duration(seconds: 3), () {

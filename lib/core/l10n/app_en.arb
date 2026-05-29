@@ -147,5 +147,14 @@
   "completionDone": "Done",
   "@completionDone": {
     "description": "Button label to dismiss the game completion screen"
+  },
+  "hintLocating": "Finding {country} on the map…",
+  "@hintLocating": {
+    "description": "Brief snackbar shown when the player activates a hint",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   }
 }

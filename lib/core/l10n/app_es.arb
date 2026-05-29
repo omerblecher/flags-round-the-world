@@ -147,5 +147,14 @@
   "completionDone": "Listo",
   "@completionDone": {
     "description": "Button label to dismiss the game completion screen"
+  },
+  "hintLocating": "Buscando {country} en el mapa…",
+  "@hintLocating": {
+    "description": "Brief snackbar shown when the player activates a hint",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   }
 }
