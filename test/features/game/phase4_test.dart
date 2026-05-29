@@ -5,6 +5,25 @@ import 'package:flags_around_the_world/features/game/game_session_notifier.dart'
 import 'package:flags_around_the_world/features/game/game_mode.dart';
 import 'package:flags_around_the_world/features/game/game_phase.dart';
 import 'package:flags_around_the_world/core/ticker.dart';
+import 'package:flags_around_the_world/core/data/game_state_repository.dart';
+import 'package:flags_around_the_world/core/data/high_score_repository.dart';
+import 'package:flags_around_the_world/features/game/game_session.dart';
+
+class _StubGameStateRepository implements GameStateRepository {
+  @override
+  Future<void> saveSession(GameSession session) async {}
+  @override
+  Future<GameSession?> loadSession() async => null;
+  @override
+  Future<void> clearSession() async {}
+}
+
+class _StubHighScoreRepository implements HighScoreRepository {
+  @override
+  Future<int?> getBestScore(GameMode mode) async => null;
+  @override
+  Future<void> saveBestScore(GameMode mode, int score) async {}
+}
 
 class _ManualTicker implements Ticker {
   void Function()? _callback;
@@ -51,15 +70,21 @@ void main() {
     late _ManualTicker ticker;
     late ProviderContainer container;
 
-    setUp(() {
+    setUp(() async {
       ticker = _ManualTicker();
       container = ProviderContainer(
         overrides: [
           gameSessionProvider
               .overrideWith(() => GameSessionNotifier(ticker: ticker)),
+          gameStateRepositoryProvider
+              .overrideWith((_) async => _StubGameStateRepository()),
+          highScoreRepositoryProvider
+              .overrideWith((_) async => _StubHighScoreRepository()),
         ],
       );
       addTearDown(container.dispose);
+      // build() is async — await initial state so tests can use .value! directly.
+      await container.read(gameSessionProvider.future);
     });
 
     test('GAME-07: useHint decrements hintsRemaining', () {

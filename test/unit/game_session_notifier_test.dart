@@ -28,7 +28,7 @@ void main() {
     late MockHighScoreRepository mockHighScoreRepo;
     late ProviderContainer container;
 
-    setUp(() {
+    setUp(() async {
       fakeTicker = FakeTicker();
       mockGameStateRepo = MockGameStateRepository();
       mockHighScoreRepo = MockHighScoreRepository();
@@ -50,6 +50,8 @@ void main() {
           ),
         ],
       );
+      // build() is async — await initial state so tests can use .value! directly.
+      await container.read(gameSessionProvider.future);
     });
 
     tearDown(() {

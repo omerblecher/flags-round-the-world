@@ -21,8 +21,8 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
         _highScoreRepository = highScoreRepository;
 
   final Ticker _ticker;
-  final GameStateRepository? _gameStateRepository;
-  final HighScoreRepository? _highScoreRepository;
+  GameStateRepository? _gameStateRepository;
+  HighScoreRepository? _highScoreRepository;
 
   int _elapsedSeconds = 0;
   int _countdownTick = 0;
@@ -33,11 +33,18 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
   List<String> _remainingIsoCodes = [];
 
   @override
-  GameSession build() {
+  Future<GameSession> build() async {
     _elapsedSeconds = 0;
     _countdownTick = 0;
     _hintPenalty = 0;
     ref.onDispose(_ticker.stop);
+
+    // Wire repositories from providers if not injected by tests.
+    _gameStateRepository ??=
+        await ref.watch(gameStateRepositoryProvider.future);
+    _highScoreRepository ??=
+        await ref.watch(highScoreRepositoryProvider.future);
+
     return const GameSession(
       phase: GamePhase.idle,
       mode: GameMode.learn,
@@ -53,12 +60,14 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
   int get countdownSecondsRemaining => 3 - _countdownTick;
 
   void startGame(GameMode mode) {
+    final current = state.value;
+    if (current == null) return; // Provider still loading
     _elapsedSeconds = 0;
     _countdownTick = 0;
     _hintPenalty = 0;
     _remainingIsoCodes = [];
     state = AsyncData(
-      state.value!.copyWith(
+      current.copyWith(
         phase: GamePhase.countdown,
         mode: mode,
         score: 0,
@@ -101,13 +110,31 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     _ticker.start(_onTick);
   }
 
+  void restoreGame(GameSession restoredSession) {
+    _ticker.stop();
+    _elapsedSeconds = restoredSession.elapsed.inSeconds;
+    _countdownTick = 0;
+    // Recover hintPenalty from persisted score.
+    // score = (elapsed ~/ 10) + (errorCount * 5) + hintPenalty
+    final baseScore =
+        (_elapsedSeconds ~/ 10) + (restoredSession.errorCount * 5);
+    _hintPenalty = (restoredSession.score - baseScore).clamp(0, 9999).toInt();
+    state = AsyncData(restoredSession.copyWith(phase: GamePhase.playing));
+    _ticker.start(_onTick);
+  }
+
   void recordDrop(String isoCode, {required bool isCorrect}) {
     final current = state.value!;
     if (isCorrect) {
-      _gameStateRepository?.saveSession(current);
+      final updated = current.copyWith(
+        matchedIsoCodes: [...current.matchedIsoCodes, isoCode],
+      );
+      state = AsyncData(updated);
+      _gameStateRepository?.saveSession(updated);
     } else {
       final newErrorCount = current.errorCount + 1;
-      final newScore = (_elapsedSeconds ~/ 10) + (newErrorCount * 5) + _hintPenalty;
+      final newScore =
+          (_elapsedSeconds ~/ 10) + (newErrorCount * 5) + _hintPenalty;
       state = AsyncData(current.copyWith(
         errorCount: newErrorCount,
         score: newScore,
@@ -128,7 +155,8 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
       return false;
     }
     _hintPenalty += 5;
-    final newScore = (_elapsedSeconds ~/ 10) + (current.errorCount * 5) + _hintPenalty;
+    final newScore =
+        (_elapsedSeconds ~/ 10) + (current.errorCount * 5) + _hintPenalty;
     state = AsyncData(current.copyWith(
       hintsRemaining: current.hintsRemaining - 1,
       score: newScore,
@@ -142,7 +170,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     final current = state.value!;
     state = AsyncData(current.copyWith(phase: GamePhase.completed));
     if (_highScoreRepository != null) {
-      await _highScoreRepository.saveBestScore(current.mode, current.score);
+      await _highScoreRepository!.saveBestScore(current.mode, current.score);
     }
   }
 }
