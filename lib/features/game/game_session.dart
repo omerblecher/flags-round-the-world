@@ -10,6 +10,7 @@ class GameSession {
     required this.errorCount,
     this.activeIsoCode,
     required this.hintsRemaining,
+    this.matchedIsoCodes = const [],
   });
 
   final GamePhase phase;
@@ -19,6 +20,7 @@ class GameSession {
   final int errorCount;
   final String? activeIsoCode;
   final int hintsRemaining;
+  final List<String> matchedIsoCodes;
 
   static const Object _sentinel = Object();
 
@@ -30,6 +32,7 @@ class GameSession {
     int? errorCount,
     Object? activeIsoCode = _sentinel,
     int? hintsRemaining,
+    List<String>? matchedIsoCodes,
   }) {
     return GameSession(
       phase: phase ?? this.phase,
@@ -41,7 +44,16 @@ class GameSession {
           ? this.activeIsoCode
           : activeIsoCode as String?,
       hintsRemaining: hintsRemaining ?? this.hintsRemaining,
+      matchedIsoCodes: matchedIsoCodes ?? this.matchedIsoCodes,
     );
+  }
+
+  static bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   @override
@@ -54,7 +66,8 @@ class GameSession {
           elapsed == other.elapsed &&
           errorCount == other.errorCount &&
           activeIsoCode == other.activeIsoCode &&
-          hintsRemaining == other.hintsRemaining;
+          hintsRemaining == other.hintsRemaining &&
+          _listEquals(matchedIsoCodes, other.matchedIsoCodes);
 
   @override
   int get hashCode => Object.hash(
@@ -65,5 +78,6 @@ class GameSession {
         errorCount,
         activeIsoCode,
         hintsRemaining,
+        Object.hashAll(matchedIsoCodes),
       );
 }
