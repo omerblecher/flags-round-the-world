@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flags_around_the_world/features/game/game_session.dart';
 import 'package:flags_around_the_world/features/game/game_phase.dart';
@@ -7,6 +8,7 @@ import 'package:flags_around_the_world/features/game/game_mode.dart';
 abstract interface class GameStateRepository {
   Future<void> saveSession(GameSession session);
   Future<GameSession?> loadSession();
+  Future<void> clearSession();
 }
 
 class SharedPreferencesGameStateRepository implements GameStateRepository {
@@ -26,6 +28,7 @@ class SharedPreferencesGameStateRepository implements GameStateRepository {
       'errorCount': session.errorCount,
       'activeIsoCode': session.activeIsoCode,
       'hintsRemaining': session.hintsRemaining,
+      'matchedIsoCodes': session.matchedIsoCodes,
     };
     await _prefs.setString(_key, jsonEncode(json));
   }
@@ -44,9 +47,23 @@ class SharedPreferencesGameStateRepository implements GameStateRepository {
         errorCount: json['errorCount'] as int,
         activeIsoCode: json['activeIsoCode'] as String?,
         hintsRemaining: json['hintsRemaining'] as int,
+        matchedIsoCodes: (json['matchedIsoCodes'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            const [],
       );
     } catch (_) {
       return null;
     }
   }
+
+  @override
+  Future<void> clearSession() async {
+    await _prefs.remove(_key);
+  }
 }
+
+final gameStateRepositoryProvider = FutureProvider<GameStateRepository>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return SharedPreferencesGameStateRepository(prefs);
+});
