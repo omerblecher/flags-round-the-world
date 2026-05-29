@@ -9,6 +9,7 @@ class HighlightPainter extends CustomPainter {
     required this.countryIndex,
     this.targetIsoCode,
     this.viewScale = 1.0,
+    this.hintIso,
   });
 
   final String? hoveredIso;
@@ -18,6 +19,8 @@ class HighlightPainter extends CustomPainter {
   /// Current InteractiveViewer scale (screen pixels per scene unit).
   /// Used to keep ring and hover-dot sizes fixed in screen pixels.
   final double viewScale;
+  /// The ISO code of the country currently highlighted as a hint.
+  final String? hintIso;
 
   // Target ring: ~16 screen-px radius, clamped between 6 and 80 scene units.
   double get _ringRadius =>
@@ -50,7 +53,8 @@ class HighlightPainter extends CustomPainter {
       old.hoveredIso != hoveredIso ||
       old.targetIsoCode != targetIsoCode ||
       (old.viewScale - viewScale).abs() > 0.005 ||
-      !identical(old.countryIndex, countryIndex);
+      !identical(old.countryIndex, countryIndex) ||
+      old.hintIso != hintIso;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -74,6 +78,12 @@ class HighlightPainter extends CustomPainter {
     if (hoveredIso != null) {
       final country = countryIndex[hoveredIso];
       if (country != null) _drawHover(canvas, country);
+    }
+
+    // Hint highlight — bright yellow-green, drawn above hover.
+    if (hintIso != null && hintIso != hoveredIso) {
+      final country = countryIndex[hintIso];
+      if (country != null) _drawHintHighlight(canvas, country);
     }
   }
 
@@ -119,6 +129,19 @@ class HighlightPainter extends CustomPainter {
 
     if (country.isDegenerate || _isTinyOnScreen(country)) {
       // Scale-adaptive gold dot — always ~10 screen px radius.
+      canvas.drawCircle(country.centroid, _hoverDotRadius, paint);
+    } else {
+      for (final path in country.paths) {
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  void _drawHintHighlight(Canvas canvas, CountryData country) {
+    final paint = Paint()
+      ..color = const Color(0xFFBBFF44)
+      ..style = PaintingStyle.fill;
+    if (country.isDegenerate || _isTinyOnScreen(country)) {
       canvas.drawCircle(country.centroid, _hoverDotRadius, paint);
     } else {
       for (final path in country.paths) {

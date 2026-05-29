@@ -1,11 +1,1 @@
-sealed class AdLoadState {
-  const AdLoadState();
-}
-
-class AdLoaded extends AdLoadState {
-  const AdLoaded();
-}
-
-class AdFailed extends AdLoadState {
-  const AdFailed();
-}
+export 'package:flags_around_the_world/core/ads/ad_load_state.dart';
