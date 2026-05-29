@@ -21,23 +21,31 @@ class GameHud extends StatelessWidget {
     final progress = totalFlags > 0 ? matchedCount / totalFlags : 0.0;
 
     return Container(
-      height: 48,
+      height: 36,
       color: Colors.grey.shade800,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
           Text(
             'Score: $score',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey.shade600,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+              borderRadius: BorderRadius.circular(3),
+              child: SizedBox(
+                height: 6,
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: Colors.grey.shade600,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                ),
               ),
             ),
           ),
@@ -46,6 +54,7 @@ class GameHud extends StatelessWidget {
             '$minutes:$seconds',
             style: const TextStyle(
               color: Colors.white,
+              fontSize: 12,
               fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),

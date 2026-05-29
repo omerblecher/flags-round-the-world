@@ -26,6 +26,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
 
   int _elapsedSeconds = 0;
   int _countdownTick = 0;
+  int _hintPenalty = 0;
   // Populated by Phase 4 mode-specific logic; kept here so the notifier
   // owns the full session state without model changes in a later phase.
   // ignore: unused_field
@@ -51,6 +52,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
   void startGame(GameMode mode) {
     _elapsedSeconds = 0;
     _countdownTick = 0;
+    _hintPenalty = 0;
     _remainingIsoCodes = [];
     state = AsyncData(
       state.value!.copyWith(
@@ -78,7 +80,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     } else if (current.phase == GamePhase.playing) {
       _elapsedSeconds++;
       final score =
-          (_elapsedSeconds ~/ 10) + (current.errorCount * 5);
+          (_elapsedSeconds ~/ 10) + (current.errorCount * 5) + _hintPenalty;
       state = AsyncData(current.copyWith(
         score: score,
         elapsed: Duration(seconds: _elapsedSeconds),
@@ -118,7 +120,12 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
   bool useHint() {
     final current = state.value;
     if (current == null || current.hintsRemaining <= 0) return false;
-    state = AsyncData(current.copyWith(hintsRemaining: current.hintsRemaining - 1));
+    _hintPenalty += 5;
+    final newScore = (_elapsedSeconds ~/ 10) + (current.errorCount * 5) + _hintPenalty;
+    state = AsyncData(current.copyWith(
+      hintsRemaining: current.hintsRemaining - 1,
+      score: newScore,
+    ));
     _gameStateRepository?.saveSession(state.value!);
     return true;
   }

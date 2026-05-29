@@ -83,12 +83,15 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
   }
 
   Widget _buildHintButton() {
-    return ElevatedButton.icon(
-      onPressed: widget.onHintPressed,
-      icon: const Icon(Icons.lightbulb_outline, size: 18),
-      label: Text('Hint ×${widget.hintsRemaining}'),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Tooltip(
+      message: 'Reveals and zooms to the target country for 3 seconds (+5 pts)',
+      child: ElevatedButton.icon(
+        onPressed: widget.onHintPressed,
+        icon: const Icon(Icons.lightbulb_outline, size: 18),
+        label: Text('Hint ×${widget.hintsRemaining}'),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
       ),
     );
   }

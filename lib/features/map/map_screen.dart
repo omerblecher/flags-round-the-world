@@ -177,15 +177,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
             TextButton(
               onPressed: () async {
+                // Capture messenger and l10n before popping — dialog context
+                // becomes detached after Navigator.pop and cannot be used for
+                // ScaffoldMessenger lookup.
+                final messenger = ScaffoldMessenger.of(context);
+                final failMsg = AppLocalizations.of(context).hintAdFailed;
                 Navigator.pop(context);
                 final adResult = await ref.read(adServiceProvider).loadRewardedAd();
                 if (adResult is AdLoaded) {
                   // Phase 6 will add refillHints() to GameSessionNotifier.
                 } else {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context).hintAdFailed)),
-                    );
+                    messenger.showSnackBar(SnackBar(content: Text(failMsg)));
                   }
                 }
               },
