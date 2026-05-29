@@ -4,8 +4,10 @@ import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
 
 class CompletionScreen extends StatelessWidget {
   final GameSession session;
+  // previousBest is wired fully in Plan 04-05; added here so the /result route compiles.
+  final int? previousBest;
 
-  const CompletionScreen({super.key, required this.session});
+  const CompletionScreen({super.key, required this.session, this.previousBest});
 
   @override
   Widget build(BuildContext context) {

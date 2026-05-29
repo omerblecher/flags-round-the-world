@@ -1,33 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import 'generated/l10n/app_localizations.dart';
+import 'features/home/home_screen.dart';
 import 'features/map/map_screen.dart';
-import 'features/map/spike_map_screen.dart';
+import 'features/map/completion_screen.dart';
+import 'features/game/game_mode.dart';
+import 'features/game/game_session.dart';
+
+/// Top-level GoRouter — defined at file scope so it is created once and reused.
+final _router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/play/:mode',
+      builder: (context, state) {
+        final modeName = state.pathParameters['mode']!;
+        final mode = GameMode.values.byName(modeName);
+        return MapScreen(mode: mode);
+      },
+    ),
+    GoRoute(
+      path: '/result',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return CompletionScreen(
+          session: extra['session'] as GameSession,
+          previousBest: extra['previousBest'] as int?,
+        );
+      },
+    ),
+  ],
+);
 
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: wire GoRouter in Phase 3
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Flags Around the World',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: const MapScreen(),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const SpikeMapScreen(),
-              ),
-            ),
-            label: const Text('Spike'),
-            icon: const Icon(Icons.map),
-          ),
-        ),
-      ),
+      routerConfig: _router,
     );
   }
 }
