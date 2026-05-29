@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: State & Data Layer** - GameSession state machine, scoring domain logic, repositories — no widgets
 - [x] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
 - [x] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT (completed 2026-05-29)
-- [ ] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
+- [x] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
 - [ ] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
 
 ## Phase Details
@@ -188,7 +188,7 @@ Plans:
 - [x] 05-05-PLAN.md — CompletionScreen share flow + parental gate + screenshot, AndroidManifest AD_ID block (COMP-04), ACCS-02 verification
 
 **Wave 4** *(blocked on Wave 3 — has human checkpoint)*
-- [ ] 05-06-PLAN.md — GREEN tests (all RED stubs), full suite run, 7-point human verification checkpoint
+- [x] 05-06-PLAN.md — GREEN tests (all RED stubs), full suite run, 7-point human verification checkpoint
 
 Cross-cutting constraints:
 - ads_isolation_test.dart must remain GREEN throughout (no lib/features/ads/ imports in game/map/core code)
@@ -222,5 +222,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. State & Data Layer | 3/3 | Complete | 2026-05-28 |
 | 3. Map Rendering & Drag-Drop | 0/5 | Planned | - |
 | 4. Game Modes & Scoring | 5/5 | Complete   | 2026-05-29 |
-| 5. Session Polish & Accessibility | 5/6 | In progress | - |
+| 5. Session Polish & Accessibility | 6/6 | Complete | 2026-05-29 |
 | 6. AdMob & COPPA Audit | 0/? | Not started | - |
