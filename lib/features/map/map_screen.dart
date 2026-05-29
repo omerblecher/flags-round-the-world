@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1025,6 +1026,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
         if (!didPop) _onBackPressed();
       },
       child: Scaffold(
+        floatingActionButton: kDebugMode
+            ? FloatingActionButton.small(
+                onPressed: _debugSkipToEnd,
+                tooltip: 'DEBUG: Skip to end',
+                child: const Icon(Icons.skip_next),
+              )
+            : null,
         body: Stack(
           children: [
             mapData.when(
@@ -1037,6 +1045,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _debugSkipToEnd() async {
+    final sessionBeforeComplete = ref.read(gameSessionProvider).value;
+    if (sessionBeforeComplete == null) return;
+    final repo = await ref.read(highScoreRepositoryProvider.future);
+    final previousBest = await repo.getBestScore(sessionBeforeComplete.mode);
+    await ref.read(gameSessionProvider.notifier).completeGame();
+    if (!mounted) return;
+    final completedSession = ref.read(gameSessionProvider).value;
+    if (completedSession == null) return;
+    context.go('/result', extra: {
+      'session': completedSession,
+      'previousBest': previousBest,
+    });
   }
 }
 
