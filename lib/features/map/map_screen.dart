@@ -541,6 +541,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
           );
       HapticFeedback.mediumImpact();
       ref.read(audioServiceProvider).playError();
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text('Not quite — try again!',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(milliseconds: 1200),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+          ),
+        );
       // triggerBounce must be called before setState invalidates _trayKey.
       _trayKey.currentState?.triggerBounce();
       setState(() => _hoveredIso = null);

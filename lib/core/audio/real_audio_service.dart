@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'audio_service.dart';
@@ -28,8 +30,9 @@ class RealAudioService implements AudioService {
   Future<void> playCorrect() async {
     if (!_initialized) return;
     try {
+      await _correctPlayer.stop();
       await _correctPlayer.seek(Duration.zero);
-      await _correctPlayer.play();
+      unawaited(_correctPlayer.play());
     } catch (_) {}
   }
 
@@ -37,8 +40,9 @@ class RealAudioService implements AudioService {
   Future<void> playError() async {
     if (!_initialized) return;
     try {
+      await _errorPlayer.stop();
       await _errorPlayer.seek(Duration.zero);
-      await _errorPlayer.play();
+      unawaited(_errorPlayer.play());
     } catch (_) {}
   }
 
