@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Map Rendering & Drag-Drop** - WorldMapPainter, InteractiveViewer wrapper, coordinate-transform spike, flag tray
 - [x] **Phase 4: Game Modes & Scoring** - All four game modes, full scoring HUD, hints, session persistence <- NEXT (completed 2026-05-29)
 - [x] **Phase 5: Session Polish & Accessibility** - HUD, pause/resume, tutorial, orientation, accessibility, sharing
-- [ ] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
+- [x] **Phase 6: AdMob & COPPA Audit** - Isolated ad layer with all mediation SDKs, COPPA flags, AD_ID block, store prep
 
 ## Phase Details
 

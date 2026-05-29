@@ -146,5 +146,40 @@ None — discussion stayed within phase scope.
 
 ---
 
+## Plans
+
+**Planned:** 2026-05-29
+**Wave structure:** 3 waves, 4 plans total
+
+| Wave | Plan | Objective | Autonomous |
+|------|------|-----------|------------|
+| 1 | 06-01-PLAN.md | pubspec packages + ironSource Maven repo + AndroidManifest + network_security_config + ad_constants.dart + initializeAds() + RED test stubs | yes |
+| 2 | 06-02-PLAN.md | AdService interface redesign + AdMobAdService implementation + StubAdService extracted + provider swap | yes |
+| 2 | 06-03-PLAN.md | app.dart ConsumerStatefulWidget + App Open observer + banner/interstitial/rewarded screen wiring + GameSessionNotifier.refillHints() | yes |
+| 3 | 06-04-PLAN.md | GREEN tests + manifest checks + firebase absence check + proxy audit checkpoint + ADS requirements sign-off | no (human checkpoint) |
+
+**Key files created:**
+- `lib/core/ads/ad_constants.dart` — ad unit ID constants + kAppLovinEnabled gate (06-01)
+- `lib/core/ads/admob_ad_service.dart` — live AdMobAdService (06-02)
+- `lib/core/ads/stub_ad_service.dart` — extracted StubAdService (06-02)
+- `lib/core/ads/app_state_observer.dart` — AppStateEventNotifier re-export (06-03)
+- `android/app/src/main/res/xml/network_security_config.xml` — debug CA trust (06-01)
+- `test/unit/ad_service_test.dart` — RED stubs → GREEN after 06-02 (06-01)
+
+**Key files modified:**
+- `pubspec.yaml` — 5 new packages (06-01)
+- `android/build.gradle.kts` — ironSource Maven repo (06-01)
+- `android/app/src/main/AndroidManifest.xml` — AdMob App ID + networkSecurityConfig (06-01)
+- `lib/main.dart` — initializeAds() before runApp() (06-01)
+- `lib/core/ads/ad_service.dart` — redesigned interface (06-02)
+- `lib/core/ads/ad_service_provider.dart` — AdMobAdService (06-02)
+- `lib/app.dart` — ConsumerStatefulWidget + App Open observer (06-03)
+- `lib/features/home/home_screen.dart` — banner (06-03)
+- `lib/features/map/completion_screen.dart` — ConsumerStatefulWidget + banner + interstitial (06-03)
+- `lib/features/map/map_screen.dart` — rewarded ad wiring (06-03)
+- `lib/features/game/game_session_notifier.dart` — refillHints() (06-03)
+
+---
+
 *Phase: 6-AdMob & COPPA Audit*
 *Context gathered: 2026-05-29*

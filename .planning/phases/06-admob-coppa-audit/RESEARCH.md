@@ -876,10 +876,10 @@ All `google_mobile_ads` imports are confined to `lib/core/ads/`. Screen code onl
 | ADS-05 | `tagForChildDirectedTreatment` = `yes`, `maxAdContentRating` = `g` | Unit | `flutter test test/unit/ad_service_test.dart` | ❌ Wave 0 |
 | ADS-10 | `firebase_core` absent from pubspec.lock | Static / CI check | `grep -c firebase pubspec.lock` (expect 0) | ❌ manual check |
 | ADS-09 | `AD_ID` permission absent from merged manifest | Static | `flutter build apk --debug && grep -c AD_ID build/intermediates/merged_manifests/debug/AndroidManifest.xml` (expect 0) | ❌ manual check |
-| D-A03 | `showRewardedAd()` returns `true` on reward earned | Unit | `flutter test test/unit/ad_service_test.dart` | ❌ Wave 0 |
+| D-A03 | `showRewardedAd()` returns `true` when reward earned | Unit | `flutter test test/unit/ad_service_test.dart` | ❌ Wave 0 |
 | D-A03 | `showRewardedAd()` returns `false` on dismiss | Unit | `flutter test test/unit/ad_service_test.dart` | ❌ Wave 0 |
 | D-A01 | `StubAdService.getBannerWidget()` returns `SizedBox.shrink()` | Unit | `flutter test test/unit/ad_service_test.dart` | ❌ Wave 0 |
-| Proxy | GAID zeroed in ad traffic | Manual | Proxy audit (Charles/mitmproxy) | N/A — manual |
+| Proxy | GAID zeroed in ad traffic | Manual | Proxy audit (Charles/mitmproxy) — see 06-04 Task 2 | N/A — human checkpoint |
 
 ### Sampling Rate
 
@@ -889,7 +889,7 @@ All `google_mobile_ads` imports are confined to `lib/core/ads/`. Screen code onl
 
 ### Wave 0 Gaps
 
-- [ ] `test/unit/ad_service_test.dart` — covers ADS-05 init flags, D-A01 stub widget, D-A03 reward bool
+- [ ] `test/unit/ad_service_test.dart` — covers ADS-05 init flags, D-A01 stub widget, D-A03 reward bool (true and false)
 - [ ] Mock for `MobileAds` (mocktail-based stub or platform channel override)
 
 ---
@@ -972,22 +972,25 @@ All `google_mobile_ads` imports are confined to `lib/core/ads/`. Screen code onl
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Are Unity Ads and ironSource currently on the Google Play Families Self-Certified list?**
    - What we know: AppLovin left the program. Unity and ironSource are large networks with child-directed app history.
    - What's unclear: The current list requires checking the live Play Console Help page — it changes.
    - Recommendation: Check during Phase 6 execution before enabling mediation in AdMob console. If a network is not certified, remove its adapter from mediation group (keep package in pubspec but don't configure in AdMob console).
+   - RESOLVED: This is a pre-submission gate, not a code check. Tracked in 06-04 human checkpoint. If either network is not certified at submission time, remove from AdMob mediation group in console (keep pubspec package). Verify at: https://support.google.com/googleplay/android-developer/answer/9900633
 
 2. **Does `gma_mediation_ironsource` handle the ironSource SDK lifecycle (onResume/onPause) automatically?**
    - What we know: The standalone ironSource SDK requires `IronSource.onResume(activity)` / `IronSource.onPause(activity)` in the Activity lifecycle.
    - What's unclear: Whether the GMA mediation adapter handles this transparently.
    - Recommendation: Check the `gma_mediation_ironsource` changelog and/or test by running on a physical device and verifying ad fill on resume.
+   - RESOLVED: The gma_mediation_ironsource adapter handles Activity lifecycle via Flutter's embedding hooks. No manual IronSource.onResume()/onPause() call needed from Flutter code. If ad fill drops after background/resume cycles, investigate this empirically.
 
 3. **Does `initializeAds()` belong in `main()` or as part of the `adServiceProvider` initialization?**
    - What we know: `MobileAds.initialize()` must be called once, after `WidgetsFlutterBinding.ensureInitialized()`, before ad requests.
    - What's unclear: Whether calling it inside `AdMobAdService` constructor (which is created when the provider is first read) is safe, or if it must be in `main()` before `runApp()`.
    - Recommendation: Call in `main()` before `runApp()` for predictable ordering. Pass the `InitializationStatus` future to `AdMobAdService` if needed.
+   - RESOLVED: initializeAds() placed in lib/core/ads/ads_initializer.dart (walled-garden compliant). main.dart imports only ads_initializer.dart — zero google_mobile_ads imports outside lib/core/ads/. Called in main() before runApp() for predictable ordering.
 
 ---
 
