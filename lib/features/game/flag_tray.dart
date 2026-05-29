@@ -76,7 +76,7 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
                 offset: _bounceAnim.value,
                 child: child,
               ),
-              child: _buildDraggableCard(),
+              child: _buildDraggableCard(context),
             ),
           ],
         ),
@@ -85,30 +85,42 @@ class FlagTrayState extends State<FlagTray> with SingleTickerProviderStateMixin 
   }
 
   Widget _buildHintButton(BuildContext context) {
-    return Tooltip(
-      message: AppLocalizations.of(context).hintTooltip,
-      child: ElevatedButton.icon(
-        onPressed: widget.onHintPressed,
-        icon: const Icon(Icons.lightbulb_outline, size: 18),
-        label: Text('Hint ×${widget.hintsRemaining}'),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      label: l10n.semanticHintButton(widget.hintsRemaining),
+      button: true,
+      child: Tooltip(
+        message: l10n.hintTooltip,
+        child: SizedBox(
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: widget.onHintPressed,
+            icon: const Icon(Icons.lightbulb_outline, size: 18),
+            label: Text('Hint ×${widget.hintsRemaining}'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(88, 48), // ACCS-03: minimum 48dp height
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDraggableCard() {
-    return Draggable<String>(
-      data: widget.currentIsoCode,
-      // Anchor the pin tip (bottom-centre of feedback) to the pointer so the
-      // user drops on the country with the visible tip, not a card corner.
-      dragAnchorStrategy: _pinAnchorStrategy,
-      feedback: _buildFeedback(),
-      // GlobalKey is only on `child` — feedback and childWhenDragging must NOT
-      // share it, or Flutter throws a duplicate-GlobalKey error during the drag.
-      childWhenDragging: Opacity(opacity: 0.3, child: _cardShell()),
-      child: _cardShell(key: widget.cardKey),
+  Widget _buildDraggableCard(BuildContext context) {
+    return Semantics(
+      label: AppLocalizations.of(context).semanticFlagCard(widget.countryName),
+      child: Draggable<String>(
+        data: widget.currentIsoCode,
+        // Anchor the pin tip (bottom-centre of feedback) to the pointer so the
+        // user drops on the country with the visible tip, not a card corner.
+        dragAnchorStrategy: _pinAnchorStrategy,
+        feedback: _buildFeedback(),
+        // GlobalKey is only on `child` — feedback and childWhenDragging must NOT
+        // share it, or Flutter throws a duplicate-GlobalKey error during the drag.
+        childWhenDragging: Opacity(opacity: 0.3, child: _cardShell()),
+        child: _cardShell(key: widget.cardKey),
+      ),
     );
   }
 
