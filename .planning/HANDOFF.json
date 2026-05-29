@@ -1,32 +1,43 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-28T16:31:21",
-  "phase": "3",
-  "phase_name": "Map Rendering & Drag-Drop",
-  "phase_dir": ".planning/phases/03-map-rendering-drag-drop",
+  "timestamp": "2026-05-29T08:45:00Z",
+  "phase": "04",
+  "phase_name": "Game Modes & Scoring",
+  "phase_dir": ".planning/phases/04-game-modes-scoring",
   "plan": 5,
-  "task": 1,
-  "total_tasks": 1,
-  "status": "awaiting_human_checkpoint",
+  "task": 3,
+  "total_tasks": 3,
+  "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "All 5 Phase 3 plans executed", "status": "done", "commit": "ba6553a"},
-    {"id": 2, "name": "Fix zoom/hit-detection/centroid bugs (5 bugs)", "status": "done", "commit": "9f1625e"},
-    {"id": 3, "name": "Fix Singapore not recognized (degenerate bbox expansion)", "status": "done", "commit": "9c9aa62"}
+    {"id": 1, "name": "Rewrite CompletionScreen with stars + PB overlay + confetti", "status": "done", "commit": "f690c4c"},
+    {"id": 2, "name": "Flip RED test stubs GREEN", "status": "done", "commit": "0aba491"},
+    {"id": 3, "name": "Human verification checkpoint", "status": "in_progress", "progress": "4 bug fixes applied, not committed. User must re-run app and verify 6 checks."}
   ],
   "remaining_tasks": [
-    {"id": 4, "name": "SC4 manual re-test on device/emulator", "status": "awaiting_human"}
+    {"id": "post-fix-commit", "name": "Commit 4 post-execution bug fixes", "status": "not_started"},
+    {"id": "checkpoint", "name": "Human approves 6 gameplay checks after fixes", "status": "not_started"},
+    {"id": "code-review", "name": "Run /gsd:code-review 4", "status": "not_started"},
+    {"id": "verify", "name": "Run /gsd:verify-work 4", "status": "not_started"}
   ],
-  "blockers": [
-    {"description": "SC4: manual drag-drop verification at 1x/2x/4x zoom on physical or emulated device", "type": "human_action", "workaround": "none — required for phase completion"}
-  ],
+  "blockers": [],
   "human_actions_pending": [
-    {"action": "flutter build apk --profile && adb install ... then run SC4 checklist in .continue-here.md", "context": "All bugs fixed including Singapore. Need device confirmation before closing Phase 3.", "blocking": true}
+    {
+      "action": "Commit fixes, run 'flutter run', verify all 6 gameplay checks, type 'approved'",
+      "context": "Plan 04-05 Task 3 blocking human-verify checkpoint. 4 fixes applied this session.",
+      "blocking": true
+    }
   ],
   "decisions": [
-    {"decision": "Degenerate country bbox uses max(minSceneDiag, diagonal*2) as effective minimum", "rationale": "Malaysia's SVG path contains Singapore's territory; drops just outside Singapore's tiny rect must still register", "phase": "3"},
-    {"decision": "Centroid tiebreaker (not smallest-area) for hit detection", "rationale": "Prevents Andorra/Spain steal while still correctly assigning Singapore over Malaysia", "phase": "3"}
+    {"decision": "Hint penalty +5 pts via _hintPenalty accumulator in notifier", "rationale": "Score formula recalculates each tick — direct score write gets overwritten", "phase": "04"},
+    {"decision": "HUD height 48→36px, text 12px", "rationale": "User reported score/timer too large on device", "phase": "04"},
+    {"decision": "Capture ScaffoldMessenger before Navigator.pop() in hint dialog", "rationale": "Dialog context is detached after pop; ScaffoldMessenger.of(detached context) fails silently", "phase": "04"}
   ],
-  "uncommitted_files": [".planning/STATE.md"],
-  "next_action": "Build APK (flutter build apk --profile), install on device, run SC4 checklist in .continue-here.md. If passes: update STATE.md, ROADMAP.md, 03-05-SUMMARY.md, then /gsd:verify-work 3",
-  "context_notes": "Phase 3 is fully implemented. The only gate is the SC4 human checkpoint. Singapore fix was the last known bug. 47/47 unit tests pass. Open CR items (CR-01, WR-01, WR-03, WR-04, WR-07) exist but are not blocking SC4."
+  "uncommitted_files": [
+    "lib/features/game/flag_tray.dart",
+    "lib/features/game/game_hud.dart",
+    "lib/features/game/game_session_notifier.dart",
+    "lib/features/map/map_screen.dart"
+  ],
+  "next_action": "git add lib/features/game/flag_tray.dart lib/features/game/game_hud.dart lib/features/game/game_session_notifier.dart lib/features/map/map_screen.dart && git commit -m 'fix(04): HUD size, hint tooltip, snackbar context bug, hint penalty'. Then flutter run and verify 6 checkpoint checks.",
+  "context_notes": "All 5 plans executed. Executor agents wrote to main tree paths alongside worktree paths — recovery: git checkout HEAD -- <file>, rm untracked, then merge. Wave 2 parallel worktrees merged cleanly."
 }
