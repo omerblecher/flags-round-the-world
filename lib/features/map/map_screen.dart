@@ -452,7 +452,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final countryNamesAsync = ref.watch(countryNamesProvider);
     final countryNames = countryNamesAsync.value ?? {};
     final matchedCount = _matchedIsoCodes.length;
-    const totalFlags = 196;
+    final totalFlags = countries.isNotEmpty ? countries.length : 1;
 
     // Mode-based visibility booleans (per D-A04).
     final showLabels = widget.mode == GameMode.learn ||
