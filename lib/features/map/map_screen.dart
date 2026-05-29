@@ -16,19 +16,12 @@ import 'package:flags_around_the_world/features/map/hit_detection.dart';
 import 'package:flags_around_the_world/features/map/completion_screen.dart';
 import 'package:flags_around_the_world/features/game/flag_tray.dart';
 import 'package:flags_around_the_world/features/game/game_session_notifier.dart';
+import 'package:flags_around_the_world/features/map/flag_sequence.dart';
 
 // Top-level provider — no codegen per project convention.
 final countryDataProvider = FutureProvider<List<CountryData>>(
   (ref) => CountryDataService().loadMapData(),
 );
-
-/// Builds a shuffled list of ISO codes from [countries].
-/// Exposed as a top-level function for unit testing.
-List<String> buildFlagSequence(List<CountryData> countries) {
-  final list = countries.map((c) => c.isoCode).toList();
-  list.shuffle();
-  return list;
-}
 
 class MapScreen extends ConsumerStatefulWidget {
   final GameMode mode;
