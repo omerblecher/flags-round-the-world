@@ -44,3 +44,10 @@ class CountryDataService {
 final countryNamesProvider = FutureProvider<Map<String, String>>((ref) async {
   return CountryDataService().loadCountryNames(const Locale('en'));
 });
+
+// Top-level provider — no codegen per project convention.
+// Declared here (not in map_screen.dart) so HomeScreen can import it without
+// importing the full MapScreen widget.
+final countryDataProvider = FutureProvider<List<CountryData>>(
+  (ref) => CountryDataService().loadMapData(),
+);

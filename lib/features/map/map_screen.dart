@@ -24,10 +24,8 @@ import 'package:flags_around_the_world/features/game/flag_tray.dart';
 import 'package:flags_around_the_world/features/game/game_session_notifier.dart';
 import 'package:flags_around_the_world/features/map/flag_sequence.dart';
 
-// Top-level provider — no codegen per project convention.
-final countryDataProvider = FutureProvider<List<CountryData>>(
-  (ref) => CountryDataService().loadMapData(),
-);
+// countryDataProvider is declared in country_data_service.dart so HomeScreen
+// can import it without depending on the full MapScreen widget.
 
 class MapScreen extends ConsumerStatefulWidget {
   final GameMode mode;
