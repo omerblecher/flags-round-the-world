@@ -165,6 +165,15 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     return true;
   }
 
+  /// Restores hint count to 2 after the user earns a rewarded ad.
+  /// No-ops if not in playing phase.
+  void refillHints() {
+    final current = state.value;
+    if (current == null || current.phase != GamePhase.playing) return;
+    state = AsyncData(current.copyWith(hintsRemaining: 2));
+    _gameStateRepository?.saveSession(state.value!);
+  }
+
   Future<void> completeGame() async {
     _ticker.stop();
     final current = state.value!;
