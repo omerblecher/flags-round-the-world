@@ -12,6 +12,7 @@ import 'package:flags_around_the_world/core/ads/ad_service_provider.dart';
 import 'package:flags_around_the_world/core/audio/audio_service_provider.dart';
 import 'package:flags_around_the_world/core/data/country_data_service.dart';
 import 'package:flags_around_the_world/core/data/high_score_repository.dart';
+import 'package:flags_around_the_world/core/data/user_prefs_repository.dart';
 import 'package:flags_around_the_world/core/models/country_data.dart';
 import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
 import 'package:flags_around_the_world/features/game/game_mode.dart';
@@ -47,7 +48,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final TransformationController _controller = TransformationController();
   final GlobalKey _ivKey = GlobalKey();
 
@@ -87,16 +88,39 @@ class _MapScreenState extends ConsumerState<MapScreen>
   late AnimationController _hintZoomController;
   Animation<Matrix4>? _hintZoomAnim;
 
+  // ---------- Pause state -----------------------------------------------------
+
+  bool _isPauseOverlayVisible = false;
+
+  // ---------- Mute state (loaded from UserPrefsRepository on init) ------------
+
+  bool _isMuted = false;
+
+  // ---------- Tutorial state --------------------------------------------------
+
+  bool _tutorialActive = false;
+  bool _tutorialChecked = false;
+  int _tutorialStep = 0; // 0-3
+
   // --------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller.addListener(_onScaleChanged);
     _hintZoomController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    _loadMuteState();
+  }
+
+  Future<void> _loadMuteState() async {
+    final repo = await ref.read(userPrefsRepositoryProvider.future);
+    final muted = await repo.getMuted();
+    if (mounted) setState(() => _isMuted = muted);
+    await ref.read(audioServiceProvider).setMuted(muted);
   }
 
   void _onScaleChanged() {
@@ -108,6 +132,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _hintZoomController.dispose();
     _hintTimer?.cancel();
     _controller.removeListener(_onScaleChanged);
@@ -117,6 +142,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      final session = ref.read(gameSessionProvider).value;
+      if (session != null && session.phase == GamePhase.playing) {
+        ref.read(gameSessionProvider.notifier).pauseGame();
+        if (mounted) setState(() => _isPauseOverlayVisible = true);
+      }
+    }
+    // Do NOT auto-resume on AppLifecycleState.resumed — overlay stays visible
+  }
+
   // ---------------------------------------------------------------------------
   // Sequence initialisation — called once when country data arrives.
   // ---------------------------------------------------------------------------
@@ -124,6 +161,62 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _initSequence(List<CountryData> countries) {
     if (_sequenceInitialized) return;
     _sequenceInitialized = true;
+
+    // Session restore path (D-S03/S04)
+    if (widget.restoredSession != null &&
+        widget.restoredMatchedIsoCodes != null &&
+        widget.restoredRemainingIsoCodes != null) {
+      _matchedIsoCodes = widget.restoredMatchedIsoCodes!.toSet();
+      _remainingIsoCodes = List<String>.from(widget.restoredRemainingIsoCodes!);
+      if (_remainingIsoCodes.isNotEmpty) {
+        _currentIsoCode = _remainingIsoCodes.first;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _fitMapToScreen();
+        ref.read(gameSessionProvider.notifier).restoreGame(widget.restoredSession!);
+      });
+      return; // Skip tutorial on restore
+    }
+
+    // Normal start: check tutorial first
+    _checkTutorial(countries);
+  }
+
+  Future<void> _checkTutorial(List<CountryData> countries) async {
+    if (_tutorialChecked) return;
+    _tutorialChecked = true;
+    final repo = await ref.read(userPrefsRepositoryProvider.future);
+    final seen = await repo.getTutorialSeen();
+    if (!mounted) return;
+    if (!seen) {
+      setState(() => _tutorialActive = true);
+      // Game sequence is built now but startGame() is deferred to _onTutorialDismissed
+      _buildSequence(countries);
+    } else {
+      _startSequence(countries);
+    }
+  }
+
+  void _buildSequence(List<CountryData> countries) {
+    if (widget.mode == GameMode.grandMaster) {
+      buildGrandMasterSequence(countries).then((seq) {
+        if (!mounted) return;
+        setState(() {
+          _remainingIsoCodes = seq;
+          if (_remainingIsoCodes.isNotEmpty) _currentIsoCode = _remainingIsoCodes.first;
+        });
+      });
+    } else {
+      final seq = buildFlagSequence(countries);
+      setState(() {
+        _remainingIsoCodes = seq;
+        if (_remainingIsoCodes.isNotEmpty) _currentIsoCode = _remainingIsoCodes.first;
+      });
+    }
+  }
+
+  void _startSequence(List<CountryData> countries) {
     if (widget.mode == GameMode.grandMaster) {
       buildGrandMasterSequence(countries).then((seq) {
         if (!mounted) return;
@@ -144,6 +237,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ref.read(gameSessionProvider.notifier).startGame(widget.mode);
       });
     }
+  }
+
+  Future<void> _toggleMute() async {
+    final newMuted = !_isMuted;
+    final repo = await ref.read(userPrefsRepositoryProvider.future);
+    await repo.setMuted(newMuted);
+    await ref.read(audioServiceProvider).setMuted(newMuted);
+    if (mounted) setState(() => _isMuted = newMuted);
   }
 
   void _fitMapToScreen() {
@@ -443,6 +544,193 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   // ---------------------------------------------------------------------------
+  // Pause overlay
+  // ---------------------------------------------------------------------------
+
+  void _onPausePressed() {
+    ref.read(gameSessionProvider.notifier).pauseGame();
+    setState(() => _isPauseOverlayVisible = true);
+  }
+
+  void _dismissPauseOverlay() {
+    ref.read(gameSessionProvider.notifier).resumeGame();
+    setState(() => _isPauseOverlayVisible = false);
+  }
+
+  Widget _buildPauseOverlay(AppLocalizations l10n) {
+    return GestureDetector(
+      onTap: () {}, // Consume taps so they don't pass through to map
+      child: Container(
+        color: Colors.black54,
+        child: Center(
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 40),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.pauseTitle,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Resume
+                  Semantics(
+                    button: true,
+                    label: l10n.pauseResume,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _dismissPauseOverlay,
+                        child: Text(l10n.pauseResume),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Mute toggle
+                  Semantics(
+                    button: true,
+                    label: _isMuted ? l10n.pauseMuteOff : l10n.pauseMuteOn,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: _toggleMute,
+                        icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up),
+                        label: Text(_isMuted ? l10n.pauseMuteOff : l10n.pauseMuteOn),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // End Game (D-P03, SESS-07)
+                  Semantics(
+                    button: true,
+                    label: l10n.pauseEndGame,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: TextButton(
+                        onPressed: () {
+                          ref.read(gameSessionProvider.notifier).pauseGame();
+                          context.go('/');
+                        },
+                        child: Text(
+                          l10n.pauseEndGame,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tutorial overlay
+  // ---------------------------------------------------------------------------
+
+  Widget _buildTutorialOverlay(AppLocalizations l10n) {
+    final steps = [
+      _TutorialStep(title: l10n.tutorialStep1Title, body: l10n.tutorialStep1Body),
+      _TutorialStep(title: l10n.tutorialStep2Title, body: l10n.tutorialStep2Body),
+      _TutorialStep(title: l10n.tutorialStep3Title, body: l10n.tutorialStep3Body),
+      _TutorialStep(title: l10n.tutorialStep4Title, body: l10n.tutorialStep4Body),
+    ];
+    final isLast = _tutorialStep >= steps.length - 1;
+    final step = steps[_tutorialStep.clamp(0, steps.length - 1)];
+
+    return Stack(
+      children: [
+        // Dim entire screen
+        Container(color: Colors.black.withValues(alpha: 0.7)),
+        // Skip button — always visible from first frame (D-T02)
+        Positioned(
+          top: 16,
+          right: 16,
+          child: Semantics(
+            button: true,
+            label: l10n.tutorialSkip,
+            child: ElevatedButton(
+              onPressed: _onTutorialDismissed,
+              child: Text(l10n.tutorialSkip),
+            ),
+          ),
+        ),
+        // Step card centred on screen
+        Center(
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 32),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Step indicator
+                  Text(
+                    '${_tutorialStep + 1} / ${steps.length}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    step.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    step.body,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isLast
+                          ? _onTutorialDismissed
+                          : () => setState(() => _tutorialStep++),
+                      child: Text(isLast ? l10n.tutorialGotIt : l10n.tutorialNext),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onTutorialDismissed() async {
+    final repo = await ref.read(userPrefsRepositoryProvider.future);
+    await repo.setTutorialSeen(true);
+    if (!mounted) return;
+    setState(() {
+      _tutorialActive = false;
+      _tutorialStep = 0;
+    });
+    // Start the game now that the tutorial is dismissed (D-T04)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _fitMapToScreen();
+      ref.read(gameSessionProvider.notifier).startGame(widget.mode);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // Build helpers
   // ---------------------------------------------------------------------------
 
@@ -468,170 +756,187 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final showName = widget.mode == GameMode.learn ||
         widget.mode == GameMode.flagsMaster;
 
-    return Column(
+    return Stack(
       children: [
-        // HUD strip — always visible above the map.
-        GameHud(
-          score: session?.score ?? 0,
-          elapsed: session?.elapsed ?? Duration.zero,
-          matchedCount: matchedCount,
-          totalFlags: totalFlags,
-          onPause: () {}, // TODO(05-04): wire to pause overlay
-        ),
-        // Map area
-        Expanded(
-          child: Stack(
-            children: [
-              // InteractiveViewer
-              InteractiveViewer(
-                key: _ivKey,
-                transformationController: _controller,
-                constrained: false,
-                minScale: 0.08,
-                maxScale: 32.0,
-                child: SizedBox(
-                  // Double width so the world wraps: after Australia the user
-                  // can keep panning right to reach the Americas.
-                  width: 4000,
-                  height: 1000,
-                  child: Stack(
-                    children: [
-                      // Layer 1: static map (fills, borders, labels)
-                      RepaintBoundary(
-                        child: CustomPaint(
-                          isComplex: true,
-                          painter: WorldMapPainter(
-                            countries: countries,
-                            matchedIsoCodes: _matchedIsoCodes,
-                            showLabels: showLabels,
-                            countryNames: countryNames,
-                          ),
-                          size: const Size(4000, 1000),
-                        ),
-                      ),
-                      // Layer 2: dynamic hover highlight + target indicator + hint
-                      RepaintBoundary(
-                        child: CustomPaint(
-                          willChange: true,
-                          painter: HighlightPainter(
-                            hoveredIso: _hoveredIso,
-                            countryIndex: _countryIndex,
-                            targetIsoCode: _currentIsoCode.isEmpty
-                                ? null
-                                : _currentIsoCode,
-                            viewScale: _currentScale,
-                            hintIso: _hintIso,
-                          ),
-                          size: const Size(4000, 1000),
-                        ),
-                      ),
-                      // Layer 3: DragTarget — receives flags dragged over the map.
-                      DragTarget<String>(
-                        builder: (ctx, _, __) => const SizedBox.expand(),
-                        onWillAcceptWithDetails: (details) {
-                          // details.offset = pointer − FlagTray.kPinAnchor;
-                          // add the anchor back to get the actual pin-tip position.
-                          final rawScene = _toSceneFromGlobal(
-                              details.offset + FlagTray.kPinAnchor);
-                          if (rawScene == null) return true;
-                          // Normalise to canonical 0-2000 range so hit detection
-                          // works identically on the wrapped right copy.
-                          final scenePoint =
-                              Offset(rawScene.dx % 2000, rawScene.dy);
-                          final scale =
-                              _controller.value.getMaxScaleOnAxis();
-                          final hitIso = hitTest(
-                            scenePoint,
-                            _countries,
-                            scale: scale,
-                          );
-                          // Only glow the current target country during hover.
-                          // Highlighting non-target countries (e.g. Venezuela
-                          // while dragging Grenada through its territory) is
-                          // confusing — the gold colour should mean "right place."
-                          setState(() => _hoveredIso =
-                              hitIso == _currentIsoCode ? hitIso : null);
-                          return true;
-                        },
-                        onAcceptWithDetails: (details) {
-                          final rawScene = _toSceneFromGlobal(
-                              details.offset + FlagTray.kPinAnchor);
-                          if (rawScene == null) return;
-                          // Which world copy the pin landed in (0 = canonical,
-                          // 2000 = right copy, etc.).  Used to fly the animation
-                          // to the correct on-screen position.
-                          final copyOffsetX =
-                              (rawScene.dx / 2000).floor() * 2000.0;
-                          final scenePoint =
-                              Offset(rawScene.dx % 2000, rawScene.dy);
-                          final scale =
-                              _controller.value.getMaxScaleOnAxis();
-                          final hitIso = hitTest(
-                            scenePoint,
-                            _countries,
-                            scale: scale,
-                          );
-                          final isCorrect = hitIso == _currentIsoCode;
-                          _handleDrop(hitIso, isCorrect,
-                              copyOffsetX: copyOffsetX);
-                        },
-                        onLeave: (_) => setState(() => _hoveredIso = null),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Zoom buttons — outside IV so they stay fixed on screen.
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+        Column(
+          children: [
+            // HUD strip — always visible above the map.
+            GameHud(
+              score: session?.score ?? 0,
+              elapsed: session?.elapsed ?? Duration.zero,
+              matchedCount: matchedCount,
+              totalFlags: totalFlags,
+              onPause: _onPausePressed,
+              isMuted: _isMuted,
+              onMuteToggle: _toggleMute,
+            ),
+            // Map area — wrapped in ColoredBox so ocean colour fills the area
+            // outside the painted canvas, eliminating black letterboxing (VIS-03).
+            Expanded(
+              child: ColoredBox(
+                color: const Color(0xFFA8D5E8), // _oceanColor — matches WorldMapPainter
+                child: Stack(
                   children: [
-                    FloatingActionButton.small(
-                      onPressed: _zoomIn,
-                      tooltip: l10n.zoomInTooltip,
-                      heroTag: 'map_zoom_in',
-                      child: const Icon(Icons.add),
+                    // InteractiveViewer
+                    InteractiveViewer(
+                      key: _ivKey,
+                      transformationController: _controller,
+                      constrained: false,
+                      minScale: 0.08,
+                      maxScale: 32.0,
+                      child: SizedBox(
+                        // Double width so the world wraps: after Australia the user
+                        // can keep panning right to reach the Americas.
+                        width: 4000,
+                        height: 1000,
+                        child: Stack(
+                          children: [
+                            // Layer 1: static map (fills, borders, labels)
+                            RepaintBoundary(
+                              child: CustomPaint(
+                                isComplex: true,
+                                painter: WorldMapPainter(
+                                  countries: countries,
+                                  matchedIsoCodes: _matchedIsoCodes,
+                                  showLabels: showLabels,
+                                  countryNames: countryNames,
+                                  viewScale: _currentScale, // VIS-01
+                                ),
+                                size: const Size(4000, 1000),
+                              ),
+                            ),
+                            // Layer 2: dynamic hover highlight + target indicator + hint
+                            RepaintBoundary(
+                              child: CustomPaint(
+                                willChange: true,
+                                painter: HighlightPainter(
+                                  hoveredIso: _hoveredIso,
+                                  countryIndex: _countryIndex,
+                                  targetIsoCode: _currentIsoCode.isEmpty
+                                      ? null
+                                      : _currentIsoCode,
+                                  viewScale: _currentScale,
+                                  hintIso: _hintIso,
+                                ),
+                                size: const Size(4000, 1000),
+                              ),
+                            ),
+                            // Layer 3: DragTarget — receives flags dragged over the map.
+                            DragTarget<String>(
+                              builder: (ctx, _, __) => const SizedBox.expand(),
+                              onWillAcceptWithDetails: (details) {
+                                // details.offset = pointer − FlagTray.kPinAnchor;
+                                // add the anchor back to get the actual pin-tip position.
+                                final rawScene = _toSceneFromGlobal(
+                                    details.offset + FlagTray.kPinAnchor);
+                                if (rawScene == null) return true;
+                                // Normalise to canonical 0-2000 range so hit detection
+                                // works identically on the wrapped right copy.
+                                final scenePoint =
+                                    Offset(rawScene.dx % 2000, rawScene.dy);
+                                final scale =
+                                    _controller.value.getMaxScaleOnAxis();
+                                final hitIso = hitTest(
+                                  scenePoint,
+                                  _countries,
+                                  scale: scale,
+                                );
+                                // Only glow the current target country during hover.
+                                // Highlighting non-target countries (e.g. Venezuela
+                                // while dragging Grenada through its territory) is
+                                // confusing — the gold colour should mean "right place."
+                                setState(() => _hoveredIso =
+                                    hitIso == _currentIsoCode ? hitIso : null);
+                                return true;
+                              },
+                              onAcceptWithDetails: (details) {
+                                final rawScene = _toSceneFromGlobal(
+                                    details.offset + FlagTray.kPinAnchor);
+                                if (rawScene == null) return;
+                                // Which world copy the pin landed in (0 = canonical,
+                                // 2000 = right copy, etc.).  Used to fly the animation
+                                // to the correct on-screen position.
+                                final copyOffsetX =
+                                    (rawScene.dx / 2000).floor() * 2000.0;
+                                final scenePoint =
+                                    Offset(rawScene.dx % 2000, rawScene.dy);
+                                final scale =
+                                    _controller.value.getMaxScaleOnAxis();
+                                final hitIso = hitTest(
+                                  scenePoint,
+                                  _countries,
+                                  scale: scale,
+                                );
+                                final isCorrect = hitIso == _currentIsoCode;
+                                _handleDrop(hitIso, isCorrect,
+                                    copyOffsetX: copyOffsetX);
+                              },
+                              onLeave: (_) => setState(() => _hoveredIso = null),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    FloatingActionButton.small(
-                      onPressed: _zoomOut,
-                      tooltip: l10n.zoomOutTooltip,
-                      heroTag: 'map_zoom_out',
-                      child: const Icon(Icons.remove),
+                    // Zoom buttons — outside IV so they stay fixed on screen.
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FloatingActionButton.small(
+                            onPressed: _zoomIn,
+                            tooltip: l10n.zoomInTooltip,
+                            heroTag: 'map_zoom_in',
+                            child: const Icon(Icons.add),
+                          ),
+                          const SizedBox(height: 8),
+                          FloatingActionButton.small(
+                            onPressed: _zoomOut,
+                            tooltip: l10n.zoomOutTooltip,
+                            heroTag: 'map_zoom_out',
+                            child: const Icon(Icons.remove),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            // Flag tray — slides in when the current ISO code changes.
+            // _trayKey is re-created on each advance so AnimatedSwitcher detects
+            // the widget change and plays the slide-in transition.
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              // FadeTransition keeps the widget at its laid-out position so its
+              // hit-test area is valid throughout the transition. SlideTransition
+              // moves the hit-test area with the animation, making the Draggable
+              // unreachable during the 300 ms slide-in window (Bug 1 root cause).
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+              child: _currentIsoCode.isEmpty
+                  ? const SizedBox.shrink()
+                  : FlagTray(
+                      key: _trayKey,
+                      currentIsoCode: _currentIsoCode,
+                      countryName: countryNames[_currentIsoCode] ?? _currentIsoCode,
+                      cardKey: _trayCardKey,
+                      showName: showName,
+                      hintsRemaining: hintsRemaining,
+                      onHintPressed: _useHint,
+                    ),
+            ),
+          ],
         ),
-        // Flag tray — slides in when the current ISO code changes.
-        // _trayKey is re-created on each advance so AnimatedSwitcher detects
-        // the widget change and plays the slide-in transition.
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          // FadeTransition keeps the widget at its laid-out position so its
-          // hit-test area is valid throughout the transition. SlideTransition
-          // moves the hit-test area with the animation, making the Draggable
-          // unreachable during the 300 ms slide-in window (Bug 1 root cause).
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-          child: _currentIsoCode.isEmpty
-              ? const SizedBox.shrink()
-              : FlagTray(
-                  key: _trayKey,
-                  currentIsoCode: _currentIsoCode,
-                  countryName: countryNames[_currentIsoCode] ?? _currentIsoCode,
-                  cardKey: _trayCardKey,
-                  showName: showName,
-                  hintsRemaining: hintsRemaining,
-                  onHintPressed: _useHint,
-                ),
-        ),
+        // Pause overlay — floats above everything when _isPauseOverlayVisible.
+        if (_isPauseOverlayVisible)
+          Positioned.fill(child: _buildPauseOverlay(l10n)),
+        // Tutorial overlay — floats above everything on first launch.
+        if (_tutorialActive)
+          Positioned.fill(child: _buildTutorialOverlay(l10n)),
       ],
     );
   }
@@ -656,4 +961,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       data: _buildMap,
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Tutorial step data class
+// ---------------------------------------------------------------------------
+
+class _TutorialStep {
+  final String title;
+  final String body;
+  const _TutorialStep({required this.title, required this.body});
 }
