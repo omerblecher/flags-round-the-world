@@ -13,5 +13,8 @@ class StubAudioService implements AudioService {
   Future<void> playError() async {}
 
   @override
+  Future<void> setMuted(bool muted) async {}
+
+  @override
   Future<void> dispose() async {}
 }

@@ -43,6 +43,15 @@ class RealAudioService implements AudioService {
   }
 
   @override
+  Future<void> setMuted(bool muted) async {
+    final volume = muted ? 0.0 : 1.0;
+    try {
+      await _correctPlayer.setVolume(volume);
+      await _errorPlayer.setVolume(volume);
+    } catch (_) {}
+  }
+
+  @override
   Future<void> dispose() async {
     await _correctPlayer.dispose();
     await _errorPlayer.dispose();
