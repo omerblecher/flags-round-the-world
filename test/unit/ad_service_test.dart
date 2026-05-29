@@ -10,6 +10,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flags_around_the_world/core/ads/ad_service.dart';
+import 'package:flags_around_the_world/core/ads/stub_ad_service.dart';
 
 void main() {
   group('StubAdService', () {

@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:flags_around_the_world/core/ads/ad_load_state.dart';
 import 'package:flags_around_the_world/core/ads/ad_service_provider.dart';
 import 'package:flags_around_the_world/core/audio/audio_service_provider.dart';
 import 'package:flags_around_the_world/core/data/country_data_service.dart';
@@ -293,8 +292,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 final messenger = ScaffoldMessenger.of(context);
                 final failMsg = AppLocalizations.of(context).hintAdFailed;
                 Navigator.pop(context);
-                final adResult = await ref.read(adServiceProvider).loadRewardedAd();
-                if (adResult is AdLoaded) {
+                final rewarded = await ref.read(adServiceProvider).showRewardedAd();
+                if (rewarded) {
                   // Phase 6 will add refillHints() to GameSessionNotifier.
                 } else {
                   if (mounted) {
