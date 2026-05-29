@@ -49,5 +49,54 @@ void main() {
       final loaded = await repo.loadSession();
       expect(loaded, equals(session));
     });
+
+    test('matchedIsoCodes serializes and deserializes correctly', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final r = SharedPreferencesGameStateRepository(prefs);
+      const session = GameSession(
+        phase: GamePhase.playing,
+        mode: GameMode.learn,
+        score: 0,
+        elapsed: Duration.zero,
+        errorCount: 0,
+        hintsRemaining: 2,
+        matchedIsoCodes: ['US', 'GB', 'FR'],
+      );
+      await r.saveSession(session);
+      final loaded = await r.loadSession();
+      expect(loaded?.matchedIsoCodes, equals(['US', 'GB', 'FR']));
+    });
+
+    test('clearSession() removes the saved session', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final r = SharedPreferencesGameStateRepository(prefs);
+      const session = GameSession(
+        phase: GamePhase.playing,
+        mode: GameMode.flagsMaster,
+        score: 10,
+        elapsed: Duration(seconds: 60),
+        errorCount: 2,
+        hintsRemaining: 1,
+      );
+      await r.saveSession(session);
+      expect(await r.loadSession(), isNotNull);
+      await r.clearSession();
+      expect(await r.loadSession(), isNull);
+    });
+
+    test('loadSession() returns empty matchedIsoCodes for legacy serialized data',
+        () async {
+      // Simulate pre-Phase-5 serialized data without matchedIsoCodes key.
+      SharedPreferences.setMockInitialValues({
+        'game_session_snapshot': '{"phase":"playing","mode":"learn","score":5,'
+            '"elapsedSeconds":30,"errorCount":1,"activeIsoCode":null,"hintsRemaining":2}'
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final r = SharedPreferencesGameStateRepository(prefs);
+      final loaded = await r.loadSession();
+      expect(loaded?.matchedIsoCodes, equals([]));
+    });
   });
 }
