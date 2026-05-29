@@ -468,6 +468,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           elapsed: session?.elapsed ?? Duration.zero,
           matchedCount: matchedCount,
           totalFlags: totalFlags,
+          onPause: () {}, // TODO(05-04): wire to pause overlay
         ),
         // Map area
         Expanded(

@@ -1,29 +1,39 @@
 import 'package:flutter/material.dart';
 
-class GameHud extends StatelessWidget {
-  final int score;
-  final Duration elapsed;
-  final int matchedCount;
-  final int totalFlags;
+import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
 
+class GameHud extends StatelessWidget {
   const GameHud({
     super.key,
     required this.score,
     required this.elapsed,
     required this.matchedCount,
     required this.totalFlags,
+    required this.onPause,
+    this.isMuted = false,
+    this.onMuteToggle,
   });
+
+  final int score;
+  final Duration elapsed;
+  final int matchedCount;
+  final int totalFlags;
+  final VoidCallback onPause;
+  final bool isMuted;
+  final VoidCallback? onMuteToggle;
 
   @override
   Widget build(BuildContext context) {
-    final minutes = elapsed.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final l10n = AppLocalizations.of(context);
+    final minutes =
+        elapsed.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
     final progress = totalFlags > 0 ? matchedCount / totalFlags : 0.0;
 
     return Container(
-      height: 36,
+      height: 48,
       color: Colors.grey.shade800,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           Text(
@@ -44,7 +54,8 @@ class GameHud extends StatelessWidget {
                   value: progress,
                   minHeight: 6,
                   backgroundColor: Colors.grey.shade600,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Colors.amber),
                 ),
               ),
             ),
@@ -56,6 +67,44 @@ class GameHud extends StatelessWidget {
               color: Colors.white,
               fontSize: 12,
               fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          // Mute toggle button — 48dp touch target
+          Semantics(
+            label: l10n.hudMuteSemanticLabel,
+            button: true,
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: IconButton(
+                tooltip: isMuted ? l10n.pauseMuteOff : l10n.pauseMuteOn,
+                icon: Icon(
+                  isMuted ? Icons.volume_off : Icons.volume_up,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: onMuteToggle,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          // Pause button — 48dp touch target
+          Semantics(
+            label: l10n.hudPauseSemanticLabel,
+            button: true,
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: IconButton(
+                tooltip: l10n.pauseButtonTooltip,
+                icon: const Icon(
+                  Icons.pause,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: onPause,
+                padding: EdgeInsets.zero,
+              ),
             ),
           ),
         ],
