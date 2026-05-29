@@ -34,6 +34,9 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
 
   @override
   GameSession build() {
+    _elapsedSeconds = 0;
+    _countdownTick = 0;
+    _hintPenalty = 0;
     ref.onDispose(_ticker.stop);
     return const GameSession(
       phase: GamePhase.idle,
