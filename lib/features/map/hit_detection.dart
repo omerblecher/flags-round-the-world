@@ -72,7 +72,15 @@ String? hitTest(Offset scenePoint, List<CountryData> countries,
 Offset _effectiveCentroid(CountryData country, Offset point) {
   for (final path in country.paths) {
     if (path.contains(point)) {
-      return path.getBounds().center;
+      final polyCenter = path.getBounds().center;
+      // Prefer the polygon bbox-center only when it's closer to the drop point
+      // than the country centroid.  This keeps the multi-polygon advantage
+      // (Malaysia Peninsula vs Borneo centroid) while fixing cases where a
+      // large single-polygon's bbox center is far from the intended target
+      // (Norway mainland bbox center falls deep into Swedish territory).
+      final polyDist = (polyCenter - point).distanceSquared;
+      final centDist = (country.centroid - point).distanceSquared;
+      return polyDist < centDist ? polyCenter : country.centroid;
     }
   }
   return country.centroid;

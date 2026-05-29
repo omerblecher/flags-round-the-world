@@ -34,6 +34,7 @@ void main() {
       mockHighScoreRepo = MockHighScoreRepository();
 
       when(() => mockGameStateRepo.saveSession(any())).thenAnswer((_) async {});
+      when(() => mockGameStateRepo.clearSession()).thenAnswer((_) async {});
       when(() => mockHighScoreRepo.saveBestScore(any(), any()))
           .thenAnswer((_) async {});
       when(() => mockHighScoreRepo.getBestScore(any()))
@@ -69,7 +70,9 @@ void main() {
       expect(container.read(gameSessionProvider).value!.phase,
           GamePhase.countdown);
 
-      // After 3 ticks: playing
+      // After 5 ticks: playing
+      fakeTicker.tick();
+      fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
@@ -95,6 +98,8 @@ void main() {
     test('SC2: 30s + 3 errors = 18 points (golf-style, per D-13)', () async {
       // Start and advance through countdown
       container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      fakeTicker.tick();
+      fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
@@ -127,6 +132,8 @@ void main() {
       fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
+      fakeTicker.tick();
+      fakeTicker.tick();
 
       // 9 ticks: score == 0
       for (var i = 0; i < 9; i++) {
@@ -151,6 +158,8 @@ void main() {
       fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
+      fakeTicker.tick();
+      fakeTicker.tick();
 
       // 1 incorrect drop at 0s elapsed: score == 5
       container
@@ -168,6 +177,8 @@ void main() {
     test('SC4: saveSession called once per correct drop', () async {
       container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
       // Advance through countdown
+      fakeTicker.tick();
+      fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();
       fakeTicker.tick();

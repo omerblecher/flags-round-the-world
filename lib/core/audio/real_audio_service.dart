@@ -12,8 +12,8 @@ class RealAudioService implements AudioService {
     _correctPlayer = AudioPlayer();
     _errorPlayer = AudioPlayer();
     try {
-      await _correctPlayer.setAsset('assets/audio/correct.mp3');
-      await _errorPlayer.setAsset('assets/audio/error.mp3');
+      await _correctPlayer.setAsset('assets/audio/correct.wav');
+      await _errorPlayer.setAsset('assets/audio/error.wav');
       _initialized = true;
     } on PlayerException catch (e) {
       debugPrint('AudioService init failed: $e');

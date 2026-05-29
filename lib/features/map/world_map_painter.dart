@@ -14,7 +14,7 @@ const _palette = [
   Color(0xFFE8D870), // Antarctica / other — light yellow
 ];
 
-const double _kDotRadius = 8.0; // scene units for degenerate-path dot markers (micro-states)
+const double _kDotRadius = 4.5; // scene units for degenerate-path dot markers (micro-states)
 
 const _matchedColor = Color(0xFFAAAAAA); // grey for already-matched countries
 const _oceanColor   = Color(0xFFA8D5E8); // light blue background
@@ -61,10 +61,13 @@ class WorldMapPainter extends CustomPainter {
 
   void _drawWorldCopy(Canvas canvas) {
     final fillPaint  = Paint()..style = PaintingStyle.fill;
+    // Stroke width in scene units = 1.0 / viewScale keeps borders at ~1 screen
+    // pixel regardless of zoom, so tiny countries (Luxembourg, Bahamas) never
+    // have borders that visually swamp their fill area.
     final borderPaint = Paint()
       ..style       = PaintingStyle.stroke
       ..color       = _borderColor
-      ..strokeWidth = 1.2;
+      ..strokeWidth = (1.0 / viewScale).clamp(0.15, 1.2);
 
     // Pass 1: all non-degenerate country fills + borders.
     for (int i = 0; i < countries.length; i++) {
@@ -113,42 +116,45 @@ class WorldMapPainter extends CustomPainter {
     }
   }
 
-  /// Font size in scene units, scaled by the country's bbox diagonal so that
-  /// small countries (Israel, Lithuania) use a smaller typeface and therefore
-  /// take up less space, reducing collision suppression.
-  static double _fontSize(double diagonal) {
-    // Range: 5.0 (micro-state) → 9.5 (continent-sized country).
-    return (4.5 + diagonal * 0.018).clamp(5.0, 9.5);
-  }
-
   void _drawLabel(Canvas canvas, String text, Offset centroid,
       CountryData country, List<Rect> drawnRects) {
-    // Compute bbox diagonal in scene units for font sizing and opacity.
     final r = country.boundingBox.rect;
     final diagonal = sqrt(r.width * r.width + r.height * r.height);
 
-    // Opacity rules — thresholds lowered so small-but-real countries like
-    // Israel (diagonal ≈ 60) are visible at the default zoom level:
-    //   micro-state  (diagonal < 20):  fade in above 2.0×
-    //   small country (diagonal < 70):  fade in above 1.0×
-    //   large country:                 always 1.0
+    // Google Maps-style: labels appear based on how large the country is
+    // ON SCREEN (diagonal × viewScale), not on viewScale alone.
+    // This ensures small European countries only appear when zoomed in while
+    // Russia/Canada/Brazil are always readable even at world zoom.
+    final onScreen = diagonal * viewScale;
     final double opacity;
     if (diagonal < 20.0) {
-      opacity = ((viewScale - 2.0) / 1.0).clamp(0.0, 1.0);
+      // Micro-state dot: show name when dot is ≥ 50 screen-px across (≈ zoom 5×)
+      opacity = ((onScreen - 50.0) / 15.0).clamp(0.0, 1.0);
     } else if (diagonal < 70.0) {
-      opacity = ((viewScale - 1.0) / 0.8).clamp(0.0, 1.0);
+      // Small country (Israel, Jordan, Austria…): appear at ≥ 60 screen-px
+      opacity = ((onScreen - 60.0) / 20.0).clamp(0.0, 1.0);
+    } else if (diagonal < 250.0) {
+      // Medium country (France, Germany, Japan…): appear at ≥ 40 screen-px
+      opacity = ((onScreen - 40.0) / 20.0).clamp(0.0, 1.0);
     } else {
-      opacity = 1.0;
+      // Large country (Russia, Canada, USA, Brazil…): appear at ≥ 25 screen-px
+      opacity = ((onScreen - 25.0) / 15.0).clamp(0.0, 1.0);
     }
-    if (opacity <= 0.0) return; // Skip drawing — avoids invisible TextPainter cost
+    if (opacity <= 0.0) return;
+
+    // Fixed screen-pixel font size (÷ viewScale converts to scene units).
+    // Slightly larger for continent-sized countries, matching Google Maps
+    // where country-name text is visually heavier than province text.
+    final screenFontSize = diagonal > 250 ? 12.0 : 11.0;
+    final fontSize = screenFontSize / viewScale;
 
     final labelAlpha = (opacity * 255).round();
-    final fontSize = _fontSize(diagonal);
     final tp = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
           fontSize: fontSize,
+          fontWeight: diagonal > 250 ? FontWeight.w600 : FontWeight.normal,
           color: Color.fromARGB(labelAlpha, 0xFF, 0xFF, 0xFF),
           shadows: const [
             Shadow(

@@ -1,5 +1,6 @@
 class AppConstants {
   const AppConstants._();
 
-  static const String privacyPolicyUrl = 'https://otis.brooke.dev/privacy';
+  static const String privacyPolicyUrl =
+      'https://omerblecher.github.io/flags-round-the-world/privacy-policy.html';
 }

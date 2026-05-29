@@ -89,7 +89,9 @@ void main() {
 
     test('GAME-07: useHint decrements hintsRemaining', () {
       container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
-      // Tick 3 times to pass countdown (GamePhase.countdown -> playing).
+      // Tick 5 times to pass countdown (GamePhase.countdown -> playing).
+      ticker.tick();
+      ticker.tick();
       ticker.tick();
       ticker.tick();
       ticker.tick();
@@ -111,6 +113,8 @@ void main() {
 
     test('GAME-07: useHint returns false when hintsRemaining is 0', () {
       container.read(gameSessionProvider.notifier).startGame(GameMode.learn);
+      ticker.tick();
+      ticker.tick();
       ticker.tick();
       ticker.tick();
       ticker.tick();

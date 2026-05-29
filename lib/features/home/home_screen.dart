@@ -170,6 +170,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final repoAsync = ref.watch(highScoreRepositoryProvider);
+    // Pre-warm map data while the user is on the home screen so it is already
+    // cached when they tap a mode — eliminates the loading spinner on MapScreen.
+    ref.watch(countryDataProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
@@ -292,7 +295,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: TextButton(
           onPressed: () async {
             final uri = Uri.parse(AppConstants.privacyPolicyUrl);
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } else if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Could not open Privacy Policy')),
+              );
+            }
           },
           child: Text(
             l10n.privacyPolicyLink,

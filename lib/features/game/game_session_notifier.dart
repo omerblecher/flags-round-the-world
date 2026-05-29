@@ -56,8 +56,8 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     );
   }
 
-  /// Number of countdown seconds remaining (3 → 2 → 1 → 0).
-  int get countdownSecondsRemaining => 3 - _countdownTick;
+  /// Number of countdown seconds remaining (5 → 4 → … → 1 → 0).
+  int get countdownSecondsRemaining => 5 - _countdownTick;
 
   void startGame(GameMode mode) {
     final current = state.value;
@@ -86,7 +86,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
 
     if (current.phase == GamePhase.countdown) {
       _countdownTick++;
-      if (_countdownTick >= 3) {
+      if (_countdownTick >= 5) {
         state = AsyncData(current.copyWith(phase: GamePhase.playing));
       }
     } else if (current.phase == GamePhase.playing) {
