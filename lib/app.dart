@@ -20,7 +20,15 @@ final _router = GoRouter(
       builder: (context, state) {
         final modeName = state.pathParameters['mode']!;
         final mode = GameMode.values.byName(modeName);
-        return MapScreen(mode: mode);
+        final extra = state.extra as Map<String, dynamic>?;
+        return MapScreen(
+          mode: mode,
+          restoredMatchedIsoCodes:
+              extra?['matchedIsoCodes'] as List<String>?,
+          restoredRemainingIsoCodes:
+              extra?['remainingIsoCodes'] as List<String>?,
+          restoredSession: extra?['restoredSession'] as GameSession?,
+        );
       },
     ),
     GoRoute(

@@ -16,6 +16,7 @@ import 'package:flags_around_the_world/core/models/country_data.dart';
 import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
 import 'package:flags_around_the_world/features/game/game_mode.dart';
 import 'package:flags_around_the_world/features/game/game_phase.dart';
+import 'package:flags_around_the_world/features/game/game_session.dart';
 import 'package:flags_around_the_world/features/game/game_hud.dart';
 import 'package:flags_around_the_world/features/map/world_map_painter.dart';
 import 'package:flags_around_the_world/features/map/highlight_painter.dart';
@@ -29,8 +30,17 @@ import 'package:flags_around_the_world/features/map/flag_sequence.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   final GameMode mode;
+  final List<String>? restoredMatchedIsoCodes;
+  final List<String>? restoredRemainingIsoCodes;
+  final GameSession? restoredSession;
 
-  const MapScreen({super.key, required this.mode});
+  const MapScreen({
+    super.key,
+    required this.mode,
+    this.restoredMatchedIsoCodes,
+    this.restoredRemainingIsoCodes,
+    this.restoredSession,
+  });
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
