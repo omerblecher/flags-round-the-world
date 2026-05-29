@@ -292,9 +292,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 final messenger = ScaffoldMessenger.of(context);
                 final failMsg = AppLocalizations.of(context).hintAdFailed;
                 Navigator.pop(context);
-                final rewarded = await ref.read(adServiceProvider).showRewardedAd();
-                if (rewarded) {
-                  // Phase 6 will add refillHints() to GameSessionNotifier.
+                final earned = await ref.read(adServiceProvider).showRewardedAd();
+                if (earned) {
+                  ref.read(gameSessionProvider.notifier).refillHints();
                 } else {
                   if (mounted) {
                     messenger.showSnackBar(SnackBar(content: Text(failMsg)));
