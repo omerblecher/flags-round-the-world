@@ -1,19 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
 import 'package:flags_around_the_world/features/game/game_mode.dart';
 import 'package:flags_around_the_world/core/data/high_score_repository.dart';
-
-// Private local provider for high scores on the home screen.
-// Plan 04-03 promotes a canonical provider to high_score_repository.dart;
-// Plan 04-04 will remove this private one once both plans have merged.
-final _homeHighScoreRepoProvider = FutureProvider<HighScoreRepository>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  return SharedPreferencesHighScoreRepository(prefs);
-});
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -21,7 +12,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final repoAsync = ref.watch(_homeHighScoreRepoProvider);
+    final repoAsync = ref.watch(highScoreRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(
