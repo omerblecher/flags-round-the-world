@@ -266,14 +266,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final repo = await ref.read(highScoreRepositoryProvider.future);
       final previousBest = await repo.getBestScore(sessionBeforeComplete.mode);
       await ref.read(gameSessionProvider.notifier).completeGame();
-      await repo.saveBestScore(sessionBeforeComplete.mode, sessionBeforeComplete.score);
-      final completedSession = ref.read(gameSessionProvider).value!;
-      if (mounted) {
-        context.go('/result', extra: {
-          'session': completedSession,
-          'previousBest': previousBest,
-        });
-      }
+      // completeGame() already calls saveBestScore — no redundant save here.
+      if (!mounted) return;
+      final completedSession = ref.read(gameSessionProvider).value;
+      if (completedSession == null) return;
+      context.go('/result', extra: {
+        'session': completedSession,
+        'previousBest': previousBest,
+      });
     } else {
       setState(() {
         _currentIsoCode = _remainingIsoCodes.first;
