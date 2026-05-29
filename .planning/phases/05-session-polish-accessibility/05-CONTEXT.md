@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Phase 5 delivers: a pause button in the HUD (with modal overlay pause screen), auto-pause on app background, "Continue your game?" session restore via `GameSession.matchedIsoCodes` (a new field added to the model), a first-launch coach-mark tutorial in MapScreen, portrait/landscape layout correctness, accessibility labels and 48dp touch targets, a mute toggle persisted via SharedPreferences, and social sharing gated behind a parental challenge with a privacy policy link on HomeScreen.
+Phase 5 delivers: a pause button in the HUD (with modal overlay pause screen), auto-pause on app background, "Continue your game?" session restore via `GameSession.matchedIsoCodes` (a new field added to the model), a first-launch coach-mark tutorial in MapScreen, portrait/landscape layout correctness, accessibility labels and 48dp touch targets, a mute toggle persisted via SharedPreferences, social sharing gated behind a parental challenge with a privacy policy link on HomeScreen, plus three canvas/UX fixes identified from build video review: zoom-dependent label culling, 48dp proximity-snap hit targets via viewport-area threshold, and canvas bounds backfill to eliminate black letterboxing.
 
 **In scope:**
 - Add `matchedIsoCodes: List<String>` field to `GameSession` model + `GameStateRepository` serialization
@@ -15,15 +15,18 @@ Phase 5 delivers: a pause button in the HUD (with modal overlay pause screen), a
 - Auto-pause on `AppLifecycleState.paused` via `WidgetsBindingObserver` in MapScreen
 - "Continue your game?" dialog on HomeScreen: checks for saved in-progress session, shows mode name / score / elapsed / flags matched; "Continue" passes matchedIsoCodes + remainingIsoCodes in GoRouter extras to MapScreen; "Start fresh" clears the snapshot
 - Sessions in countdown or other non-playing/paused state treated as bad state and cleared silently
-- Coach-mark tutorial overlay on first MapScreen entry: 4 steps (flag tray → drag gesture → zoom → hint button); skip button always visible; 'tutorial_seen' bool in SharedPreferences; first launch only, no replay
+- Coach-mark tutorial overlay on first MapScreen entry: 4 steps (flag tray → drag gesture → zoom → hint button); skip button always visible; 'tutorial_seen' bool in SharedPreferences; first launch only, no replay; game timer must NOT start until the tutorial is dismissed
 - Orientation (SESS-06): portrait + landscape both work correctly (MapScreen `_fitMapToScreen()` already adapts to viewport size — verify/fix if needed)
 - ACCS-01: Mute toggle button in HUD (or accessible from pause overlay); mute pref persisted in SharedPreferences, respects device silent switch
 - ACCS-02: Correct/incorrect feedback verified to use shape + sound + color (not color alone)
 - ACCS-03: All tappable targets ≥ 48dp; verify and fix flag tray, hint button, zoom buttons, HUD pause button
 - ACCS-04: Semantic accessibility labels on all interactive elements (TalkBack / VoiceOver)
-- SHAR-01–04: CompletionScreen "Share Score" button → parental gate (2-digit × 1-digit multiplication) → `RepaintBoundary.toImage()` capture of score card → stylized overlay header "New lowest score in [Level] level!" → native OS share sheet
-- COMP-02: Placeholder privacy policy URL (`https://otis.brooke.dev/privacy` or similar) wired in app; small link in HomeScreen footer
-- COMP-04: Verify `AD_ID` permission blocked in AndroidManifest.xml via `tools:remove` (may already exist from Phase 1 scaffold; confirm)
+- SHAR-01–04: CompletionScreen "Share Score" button → parental gate (2-digit × 1-digit multiplication, 3 failed attempts regenerate a new problem rather than locking out) → `RepaintBoundary.toImage()` capture of score card → stylized overlay header "New lowest score in [Level] level!" → native OS share sheet via `share_plus`
+- COMP-02: Privacy policy URL `https://otis.brooke.dev/privacy` wired as a constant; small "Privacy Policy" link in HomeScreen footer via `url_launcher`
+- COMP-04: Add `AD_ID` permission block via `tools:remove` to AndroidManifest.xml
+- **VIS-01 Zoom-dependent label culling:** `WorldMapPainter` receives `viewScale` (currently passed to `HighlightPainter` but not `WorldMapPainter`). Labels for micro-states (bbox diagonal < 30 scene units) are suppressed below 2.5× viewport scale and fade in smoothly above it. Labels for small countries (bbox diagonal < 100 units) suppress below 1.5× and fade in above. Large countries always show labels. Use opacity variation in `TextSpan` style rather than per-country `AnimatedOpacity` (painter context; no widget layer).
+- **VIS-02 Radial proximity-snap hit targets:** The existing `hitTest` already expands degenerate countries; Phase 5 adds an explicit **viewport-area threshold**. Any country whose on-screen bounding-box area (bbox area × scale²) is below a configurable pixel threshold (≈ 2304 px², i.e. a 48×48dp square) receives centroid-based radial expansion to guarantee a 48dp tap target regardless of shape. This replaces the current diagonal-based expansion for those countries.
+- **VIS-03 Canvas bounds backfill:** Wrap the `Expanded(Stack(...))` map area in a `ColoredBox` using `_oceanColor` (`0xFFA8D5E8`). This fills the space outside the map canvas when zoomed out, eliminating the black letterboxing. No change to `WorldMapPainter` needed — the fix is in the widget layout layer.
 
 **Out of scope:**
 - Real AdMob rewarded ads — stub continues (Phase 6)
@@ -56,9 +59,14 @@ Phase 5 delivers: a pause button in the HUD (with modal overlay pause screen), a
 
 ### Social Sharing
 - **D-H01:** CompletionScreen gets a "Share Score" button (visible only when the game produced a personal best, or always — decide at implementation time based on SHAR-01 wording: "victory screen" = completion screen).
-- **D-H02:** Screenshot capture uses `RepaintBoundary` with a `GlobalKey` wrapping the CompletionScreen score card widget. On share tap, call `key.currentContext!.findRenderObject()` as `RenderRepaintBoundary`, then `.toImage(pixelRatio: 3.0)`. Composite the overlay header "New lowest score in [Level Name] level!" onto the image using `Canvas.drawImage` before sharing.
-- **D-H03:** Parental gate: **2-digit × 1-digit** multiplication puzzle (e.g., `43 × 7 = ?`). Random operands regenerated each time. User types the answer on a numeric keypad. Wrong answer: show "Incorrect — try again" and generate a new problem. No limit on attempts. Correct: proceed to share.
-- **D-H04:** Privacy policy URL: **placeholder `https://otis.brooke.dev/privacy`** (or similar) wired as a constant in a `constants.dart` file. A small "Privacy Policy" tappable text in the HomeScreen footer opens this URL via `url_launcher`. The same URL will be entered in the Play Store listing before publish.
+- **D-H02:** Screenshot capture uses `RepaintBoundary` with a `GlobalKey` wrapping the CompletionScreen score card widget. On share tap, call `key.currentContext!.findRenderObject()` as `RenderRepaintBoundary`, then `.toImage(pixelRatio: 3.0)`. Composite the overlay header "New lowest score in [Level Name] level!" onto the image using `Canvas.drawImage` before sharing. Save to a temp file and share via `share_plus`.
+- **D-H03:** Parental gate: **2-digit × 1-digit** multiplication puzzle (e.g., `43 × 7 = ?`). Random operands regenerated each time. User types the answer on a numeric keypad. **3 failed attempts regenerate a new problem — no lockout** (avoids frustrating a parent on a child's phone; COPPA best practice). Correct: proceed to share.
+- **D-H04:** Privacy policy URL: **`https://otis.brooke.dev/privacy`** wired as a constant in `lib/core/constants.dart`. A small "Privacy Policy" tappable text in the HomeScreen footer opens this URL via `url_launcher`. Same URL in the Play Store listing before publish.
+
+### Canvas & UX Fixes (from build review)
+- **D-V01:** `WorldMapPainter` receives a new `viewScale: double` constructor parameter (default `1.0`). In `_drawLabel`, compute label opacity: micro-state countries (bbox diagonal < 30 scene units) → `opacity = ((viewScale − 2.5) / 1.0).clamp(0.0, 1.0)`; small countries (bbox diagonal < 100 units) → `opacity = ((viewScale − 1.5) / 1.0).clamp(0.0, 1.0)`; large countries → `opacity = 1.0`. Skip drawing if opacity == 0. Color alpha encodes opacity. `MapScreen` passes `_currentScale` (already tracked) to `WorldMapPainter`. `shouldRepaint` adds `old.viewScale != viewScale`.
+- **D-V02:** `hitTest` in `hit_detection.dart` gains a **viewport-area threshold check**. Define `const double _kMinScreenArea = 2304.0` (48px × 48px, the ACCS-03 minimum). Any country whose on-screen bbox area (`rect.width * rect.height * scale * scale`) is below `_kMinScreenArea` gets its expansion target set to a circle of radius `48.0 / scale` centred on its centroid, overriding the diagonal-based expansion. This guarantees a physical 48dp tappable target for every country regardless of its SVG size.
+- **D-V03:** In `MapScreen._buildMap`, wrap the `Expanded(Stack([...InteractiveViewer...]))` map section with `ColoredBox(color: const Color(0xFFA8D5E8), ...)`. The `_oceanColor` constant value used in `WorldMapPainter` is `0xFFA8D5E8` — the `ColoredBox` uses the same value so the background matches the painted ocean seamlessly. No painter change needed.
 
 </decisions>
 
@@ -110,21 +118,26 @@ Phase 5 delivers: a pause button in the HUD (with modal overlay pause screen), a
 ### Integration Points
 - `GoRouter` extras: Phase 5 adds `extra: {'matchedIsoCodes': List<String>, 'remainingIsoCodes': List<String>, 'restoredSession': GameSession}` to the `/play/:mode` navigation from HomeScreen on "Continue". `app.dart` GoRoute builder for `/play/:mode` must parse these extras.
 - `WidgetsBindingObserver` in `_MapScreenState`: `@override void didChangeAppLifecycleState(AppLifecycleState state)` — calls `pauseGame()` on `AppLifecycleState.paused`.
-- `url_launcher` package: needed for privacy policy link. Check if already in pubspec.yaml; add if not.
-- `Share` (share_plus package): for OS share sheet in SHAR-04. Check if already in pubspec.yaml; add if not.
+- `url_launcher` package: NOT currently in pubspec.yaml — must be added for privacy policy link.
+- `share_plus` package: NOT currently in pubspec.yaml — must be added for OS share sheet in SHAR-04.
+- `WorldMapPainter` call sites in `MapScreen._buildMap`: currently passes `showLabels`, `countryNames`, `matchedIsoCodes` — Phase 5 adds `viewScale: _currentScale`. `_currentScale` is already tracked in `_MapScreenState`.
+- `hitTest()` call sites in `map_screen.dart` (2 calls in `onWillAcceptWithDetails` and `onAcceptWithDetails`): existing `scale:` param already passed — `hit_detection.dart` changes are internal, no call-site changes needed.
+- `ColoredBox` wrapping map area in `MapScreen._buildMap` — one-line layout change.
 
 </code_context>
 
 <specifics>
 ## Specific Ideas
 
-- **Pause button icon**: use `Icons.pause` in the HUD. When game is paused (phase == paused), the HUD could show `Icons.play_arrow` to hint at "tap to resume" — but since the pause overlay takes over, the HUD pause state isn't tapped directly while paused. Keep it simple: always `Icons.pause`.
-- **Mute placement**: the mute toggle appears inside the pause overlay (alongside Resume and End Game). Additionally, ACCS-01 says it should be "visible in the HUD". Consider a small speaker icon in the HUD after the pause button: `Score | progress | timer | 🔇 | ⏸`. Or keep it only in the pause overlay for cleaner HUD design — this is a discretion call for the planner.
-- **Tutorial animation**: the "drag gesture" step doesn't need to actually drag the real flag — an animated `CustomPaint` hand-cursor overlay moving from tray position toward a country centroid is sufficient to convey the mechanic without triggering game state.
-- **Parental gate in CompletionScreen**: the gate dialog is an `AlertDialog` with a `TextField` (numeric keyboard). Generate new operands on each dialog open. Three incorrect attempts do NOT lock — just regenerate a new problem (COPPA: no lock-out that could frustrate a child trying to use a parent's phone).
-- **`url_launcher` and `share_plus`**: both are common Flutter packages. The researcher should confirm if they're already in pubspec.yaml and add them if not.
-- **GoRouter `onExit` guard**: the CLAUDE.md tech stack mentions "GoRouter with onExit back-button guard" — this was deferred from Phase 4. Phase 5 should add `onExit` to the `/play/:mode` route that shows a "Quit game?" confirmation dialog when the Android back button is pressed mid-game.
-- **`clearSession()` on GameStateRepository**: this new method simply calls `_prefs.remove(_key)`. Needed for "Start fresh" and for `completeGame()` — completed sessions should be cleared so next launch doesn't offer "Continue".
+- **Pause button icon**: use `Icons.pause` in the HUD. Keep it simple — always `Icons.pause` since the overlay takes over when paused.
+- **Mute placement**: ACCS-01 says mute should be "visible in the HUD". Add a small speaker icon after the pause button: `Score | progress | timer | 🔇 | ⏸`. Tapping opens an inline toggle. Also present in pause overlay. Planner decides final placement.
+- **Tutorial animation**: the drag gesture step uses a `CustomPaint` hand-cursor overlay with an `AnimationController`. The cursor moves from the tray's flag card position toward the nearest country centroid (e.g. France or Germany — large and visible). It must NOT trigger the actual `Draggable` — purely visual.
+- **Tutorial and game timer**: the `startGame()` call in `MapScreen` must be deferred until the tutorial is dismissed. Either delay `startGame()` until the tutorial `onDismiss` callback fires, or show the tutorial before the sequence is initialized. Best approach: tutorial runs before `_initSequence()` is called.
+- **Parental gate**: `AlertDialog` + `TextField` (numeric keyboard). Wrong answer: show inline error "Incorrect — try again" and generate new problem. No attempt limit — regenerate on each wrong answer. Correct: proceed to `share_plus` flow.
+- **`clearSession()` on GameStateRepository**: simply calls `_prefs.remove(_key)`. Needed for "Start fresh" AND for `completeGame()` — completed sessions must be cleared so next launch doesn't offer "Continue".
+- **`restoreGame(GameSession)` on `GameSessionNotifier`**: sets `_elapsedSeconds = session.elapsed.inSeconds`, derives `_hintPenalty = session.score − (elapsed ~/ 10) − (errorCount × 5)`, skips countdown, calls `state = AsyncData(session.copyWith(phase: GamePhase.playing))` and starts the ticker. The `_remainingIsoCodes` field in the notifier is unused (MapScreen owns sequence state) so no change there.
+- **Label opacity implementation**: since `CustomPainter` has no widget tree, implement opacity by computing alpha in `_drawLabel` and passing it to `TextSpan` color: `Color(_labelColor.value).withValues(alpha: opacity)`. For opacity == 0, return early without painting. This avoids a `saveLayer` call.
+- **Viewport-area threshold**: `_kMinScreenArea = 2304.0` (48 × 48 logical pixels). The check is `bbox.width * bbox.height * scale * scale < _kMinScreenArea`. Countries satisfying this get a circular expansion of radius `sqrt(_kMinScreenArea / pi) / scale` centred on `country.centroid`. Researcher should verify this formula gives ≈ 27 scene-unit radius at 1× for a 48dp target.
 
 </specifics>
 
