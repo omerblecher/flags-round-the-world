@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase-5-complete
-last_updated: "2026-05-29T15:09:47.429Z"
+status: in-progress
+last_updated: "2026-05-29T00:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 20
-  completed_plans: 23
-  percent: 50
+  completed_phases: 5
+  total_plans: 25
+  completed_plans: 25
+  percent: 58
 ---
 
 # Project State
 
 ## Current Status
 
-**Phase:** 5 — Session Polish & Accessibility (complete)
+**Phase:** 6 — AdMob & COPPA Audit (in progress, plan 01 complete)
 **Last updated:** 2026-05-29
-**Resume file:** .planning/phases/06-admob-coppa-audit/06-CONTEXT.md
+**Resume file:** .planning/phases/06-admob-coppa-audit/06-01-SUMMARY.md
 
 ## Project Reference
 
@@ -43,6 +43,9 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 
 ## Decisions
 
+- 06-01: GmaMediationUnity consent methods are instance (not static) in v1.8.0 — use GmaMediationUnity() instance
+- 06-01: COPPA init ordering enforced: child-directed flags + mediation COPPA flags before MobileAds.instance.initialize()
+- 06-01: kAppLovinEnabled=false gate documents activation path explicitly
 - applicationId set to com.otis.brooke.flags.around.the.world (corrected from flutter create default)
 - synthetic-package removed from l10n.yaml (deprecated in Flutter 3.44.0)
 - Minimal app_en.arb created with scaffoldHomeLabel to unblock flutter pub get
@@ -55,3 +58,4 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 | 02 | 01 | 300s | 3 | 9 |
 | 02 | 02 | 180s | 3 | 2 |
 | 02 | 03 | 120s | 1 | 0 |
+| 06 | 01 | 15m  | 3 | 9 |
