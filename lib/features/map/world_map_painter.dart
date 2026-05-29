@@ -66,23 +66,27 @@ class WorldMapPainter extends CustomPainter {
       ..color       = _borderColor
       ..strokeWidth = 1.2;
 
-    // Fills + borders
+    // Pass 1: all non-degenerate country fills + borders.
     for (int i = 0; i < countries.length; i++) {
       final country = countries[i];
+      if (country.isDegenerate) continue;
       final isMatched = matchedIsoCodes.contains(country.isoCode);
       fillPaint.color = isMatched ? _matchedColor : _palette[i % _palette.length];
-
-      if (country.isDegenerate) {
-        // SVG pipeline stored a 4-vertex bbox rectangle — draw a dot marker
-        // at the centroid so it looks like a map pin, not a weird square.
-        canvas.drawCircle(country.centroid, _kDotRadius, fillPaint);
-        canvas.drawCircle(country.centroid, _kDotRadius, borderPaint);
-      } else {
-        for (final path in country.paths) {
-          canvas.drawPath(path, fillPaint);
-          canvas.drawPath(path, borderPaint);
-        }
+      for (final path in country.paths) {
+        canvas.drawPath(path, fillPaint);
+        canvas.drawPath(path, borderPaint);
       }
+    }
+
+    // Pass 2: degenerate micro-state dots drawn on top so neighbouring country
+    // fills (France, Spain, etc.) never paint over them.
+    for (int i = 0; i < countries.length; i++) {
+      final country = countries[i];
+      if (!country.isDegenerate) continue;
+      final isMatched = matchedIsoCodes.contains(country.isoCode);
+      fillPaint.color = isMatched ? _matchedColor : _palette[i % _palette.length];
+      canvas.drawCircle(country.centroid, _kDotRadius, fillPaint);
+      canvas.drawCircle(country.centroid, _kDotRadius, borderPaint);
     }
 
     // Centroid labels with collision detection.
@@ -109,32 +113,42 @@ class WorldMapPainter extends CustomPainter {
     }
   }
 
+  /// Font size in scene units, scaled by the country's bbox diagonal so that
+  /// small countries (Israel, Lithuania) use a smaller typeface and therefore
+  /// take up less space, reducing collision suppression.
+  static double _fontSize(double diagonal) {
+    // Range: 5.0 (micro-state) → 9.5 (continent-sized country).
+    return (4.5 + diagonal * 0.018).clamp(5.0, 9.5);
+  }
+
   void _drawLabel(Canvas canvas, String text, Offset centroid,
       CountryData country, List<Rect> drawnRects) {
-    // Compute bbox diagonal in scene units for opacity decision (D-V01).
+    // Compute bbox diagonal in scene units for font sizing and opacity.
     final r = country.boundingBox.rect;
     final diagonal = sqrt(r.width * r.width + r.height * r.height);
 
-    // Opacity rules (D-V01):
-    //   micro-state  (diagonal < 30):  fade in above 2.5×
-    //   small country (diagonal < 100): fade in above 1.5×
+    // Opacity rules — thresholds lowered so small-but-real countries like
+    // Israel (diagonal ≈ 60) are visible at the default zoom level:
+    //   micro-state  (diagonal < 20):  fade in above 2.0×
+    //   small country (diagonal < 70):  fade in above 1.0×
     //   large country:                 always 1.0
     final double opacity;
-    if (diagonal < 30.0) {
-      opacity = ((viewScale - 2.5) / 1.0).clamp(0.0, 1.0);
-    } else if (diagonal < 100.0) {
-      opacity = ((viewScale - 1.5) / 1.0).clamp(0.0, 1.0);
+    if (diagonal < 20.0) {
+      opacity = ((viewScale - 2.0) / 1.0).clamp(0.0, 1.0);
+    } else if (diagonal < 70.0) {
+      opacity = ((viewScale - 1.0) / 0.8).clamp(0.0, 1.0);
     } else {
       opacity = 1.0;
     }
     if (opacity <= 0.0) return; // Skip drawing — avoids invisible TextPainter cost
 
     final labelAlpha = (opacity * 255).round();
+    final fontSize = _fontSize(diagonal);
     final tp = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
-          fontSize: 7.0,
+          fontSize: fontSize,
           color: Color.fromARGB(labelAlpha, 0xFF, 0xFF, 0xFF),
           shadows: const [
             Shadow(
