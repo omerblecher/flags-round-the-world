@@ -14,7 +14,7 @@ const _palette = [
   Color(0xFFE8D870), // Antarctica / other — light yellow
 ];
 
-const double _kDotRadius = 5.0; // scene units for degenerate-path dot markers
+const double _kDotRadius = 8.0; // scene units for degenerate-path dot markers (micro-states)
 
 const _matchedColor = Color(0xFFAAAAAA); // grey for already-matched countries
 const _oceanColor   = Color(0xFFA8D5E8); // light blue background
@@ -85,15 +85,32 @@ class WorldMapPainter extends CustomPainter {
       }
     }
 
-    // Centroid labels
+    // Centroid labels with collision detection.
+    // Larger countries are drawn first and take priority; small/dense regions
+    // (Europe, Caribbean, Middle East) only show labels when there is room.
     if (showLabels) {
-      for (final country in countries) {
-        _drawLabel(canvas, countryNames[country.isoCode] ?? country.isoCode, country.centroid, country);
+      final drawnRects = <Rect>[];
+      final sorted = [...countries]..sort((a, b) {
+          final ra = a.boundingBox.rect;
+          final rb = b.boundingBox.rect;
+          final da = sqrt(ra.width * ra.width + ra.height * ra.height);
+          final db = sqrt(rb.width * rb.width + rb.height * rb.height);
+          return db.compareTo(da);
+        });
+      for (final country in sorted) {
+        _drawLabel(
+          canvas,
+          countryNames[country.isoCode] ?? country.isoCode,
+          country.centroid,
+          country,
+          drawnRects,
+        );
       }
     }
   }
 
-  void _drawLabel(Canvas canvas, String text, Offset centroid, CountryData country) {
+  void _drawLabel(Canvas canvas, String text, Offset centroid,
+      CountryData country, List<Rect> drawnRects) {
     // Compute bbox diagonal in scene units for opacity decision (D-V01).
     final r = country.boundingBox.rect;
     final diagonal = sqrt(r.width * r.width + r.height * r.height);
@@ -131,11 +148,20 @@ class WorldMapPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    canvas.save();
-    tp.paint(
-      canvas,
-      centroid - Offset(tp.width / 2, tp.height / 2),
+    final origin = centroid - Offset(tp.width / 2, tp.height / 2);
+    final labelRect = Rect.fromLTWH(
+      origin.dx - 1,
+      origin.dy - 1,
+      tp.width + 2,
+      tp.height + 2,
     );
+
+    // Skip drawing if another label already occupies this space.
+    if (drawnRects.any((r) => r.overlaps(labelRect))) return;
+    drawnRects.add(labelRect);
+
+    canvas.save();
+    tp.paint(canvas, origin);
     canvas.restore();
   }
 }

@@ -172,5 +172,7 @@ class GameSessionNotifier extends AsyncNotifier<GameSession> {
     if (_highScoreRepository != null) {
       await _highScoreRepository!.saveBestScore(current.mode, current.score);
     }
+    // Clear saved session so HomeScreen never offers to "continue" a finished game.
+    await _gameStateRepository?.clearSession();
   }
 }

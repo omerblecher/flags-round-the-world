@@ -52,8 +52,7 @@ class _CompletionScreenState extends State<CompletionScreen>
     final prev = widget.previousBest;
     final score = widget.session.score;
     if (prev == null) {
-      // First game — 3 stars but NO celebration overlay (nothing to beat, per D-D01).
-      _isNewPb = false; // No overlay on first game
+      _isNewPb = false;
       _starCount = 3;
     } else if (score < prev) {
       _isNewPb = true;
@@ -94,8 +93,8 @@ class _CompletionScreenState extends State<CompletionScreen>
 
   Future<bool?> _showParentalGate(AppLocalizations l10n) async {
     final rng = math.Random();
-    int a = 10 + rng.nextInt(90); // 10-99
-    int b = 2 + rng.nextInt(8); // 2-9
+    int a = 10 + rng.nextInt(90);
+    int b = 2 + rng.nextInt(8);
     final controller = TextEditingController();
     String errorText = '';
     bool? result;
@@ -144,7 +143,6 @@ class _CompletionScreenState extends State<CompletionScreen>
                   result = true;
                   Navigator.of(ctx).pop();
                 } else {
-                  // Regenerate problem — no lockout (D-H03)
                   a = 10 + rng.nextInt(90);
                   b = 2 + rng.nextInt(8);
                   controller.clear();
@@ -175,17 +173,14 @@ class _CompletionScreenState extends State<CompletionScreen>
           await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return;
 
-      // Write to temp file
       final bytes = byteData.buffer.asUint8List();
       final tmpDir = Directory.systemTemp;
       final file = File('${tmpDir.path}/score_card.png');
       await file.writeAsBytes(bytes);
 
-      // Get mode name for header
       final modeName = _modeDisplayName(widget.session.mode, l10n);
       final headerText = l10n.shareImageHeader(modeName);
 
-      // Share via share_plus
       await Share.shareXFiles(
         [XFile(file.path)],
         text: headerText,
@@ -204,75 +199,211 @@ class _CompletionScreenState extends State<CompletionScreen>
         GameMode.grandMaster => l10n.modeGrandMasterName,
       };
 
+  Color _modeColor(GameMode mode) => switch (mode) {
+        GameMode.learn => const Color(0xFF2E7D32),
+        GameMode.flagsMaster => const Color(0xFF1565C0),
+        GameMode.geographicalMaster => const Color(0xFFE65100),
+        GameMode.grandMaster => const Color(0xFF4A148C),
+      };
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final minutes = widget.session.elapsed.inMinutes;
     final seconds = widget.session.elapsed.inSeconds % 60;
+    final modeColor = _modeColor(widget.session.mode);
+    final modeName = _modeDisplayName(widget.session.mode, l10n);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: modeColor,
+        foregroundColor: Colors.white,
+        title: Text(modeName),
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          tooltip: 'Back to menu',
+          onPressed: () => context.go('/'),
+        ),
+      ),
       body: Stack(
         children: [
-          Center(
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Stars
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (i) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        i < _starCount ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: i < _starCount ? Colors.amber : Colors.grey.shade400,
+                        size: 56,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.completionTitle,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: modeColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (_isNewPb) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade700,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      l10n.completionPersonalBest,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 32),
+
+                // Score card (captured for sharing)
                 RepaintBoundary(
                   key: _scoreCardKey,
                   child: Container(
-                    color: Theme.of(context).colorScheme.surface,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          l10n.completionTitle,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        _StatRow(
+                          icon: Icons.emoji_events,
+                          iconColor: Colors.amber.shade700,
+                          label: 'Score',
+                          value: '${widget.session.score}',
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: List.generate(
-                            3,
-                            (i) => Icon(
-                              i < _starCount ? Icons.star : Icons.star_border,
-                              color: Colors.amber,
-                              size: 40,
-                            ),
-                          ),
+                        const Divider(height: 24),
+                        _StatRow(
+                          icon: Icons.timer_outlined,
+                          iconColor: Colors.blue.shade700,
+                          label: 'Time',
+                          value:
+                              '${minutes}m ${seconds.toString().padLeft(2, '0')}s',
                         ),
-                        const SizedBox(height: 16),
-                        Text(l10n.completionScore(widget.session.score)),
-                        Text(
-                            l10n.completionElapsed('${minutes}m ${seconds.toString().padLeft(2, '0')}s')),
+                        const Divider(height: 24),
+                        _StatRow(
+                          icon: Icons.flag_outlined,
+                          iconColor: modeColor,
+                          label: 'Mode',
+                          value: modeName,
+                        ),
+                        if (widget.previousBest != null) ...[
+                          const Divider(height: 24),
+                          _StatRow(
+                            icon: Icons.history,
+                            iconColor: Colors.grey.shade600,
+                            label: 'Previous best',
+                            value: '${widget.previousBest}',
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: () => context.go('/'),
-                  child: Text(l10n.completionDone),
+
+                // Primary CTA
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.go('/'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: modeColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.home),
+                    label: const Text(
+                      'Back to Menu',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
+
+                // Secondary: play again (same mode)
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.go('/play/${widget.session.mode.name}'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: modeColor,
+                      side: BorderSide(color: modeColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.replay),
+                    label: const Text('Play Again'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Share button
                 if (_isSharing)
                   const SizedBox(
                     height: 48,
                     child: Center(child: CircularProgressIndicator()),
                   )
                 else
-                  OutlinedButton.icon(
-                    onPressed: _onSharePressed,
-                    icon: const Icon(Icons.share),
-                    label: Text(l10n.shareScoreButton),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: _onSharePressed,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                        side: BorderSide(color: Colors.grey.shade400),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: const Icon(Icons.share),
+                      label: Text(l10n.shareScoreButton),
+                    ),
                   ),
               ],
             ),
           ),
+
+          // PB confetti overlay
           if (_showPbOverlay)
             AnimatedBuilder(
               animation: _pbController,
@@ -284,46 +415,10 @@ class _CompletionScreenState extends State<CompletionScreen>
                 return IgnorePointer(
                   child: Opacity(
                     opacity: opacity,
-                    child: Stack(
-                      children: [
-                        Container(color: Colors.black26),
-                        Positioned(
-                          top: 80,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.shade700,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                    color: Colors.black38,
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                AppLocalizations.of(ctx).completionPersonalBest,
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter:
-                                _ConfettiPainter(progress: _pbController.value),
-                          ),
-                        ),
-                      ],
+                    child: Positioned.fill(
+                      child: CustomPaint(
+                        painter: _ConfettiPainter(progress: _pbController.value),
+                      ),
                     ),
                   ),
                 );
@@ -331,6 +426,39 @@ class _CompletionScreenState extends State<CompletionScreen>
             ),
         ],
       ),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+
+  const _StatRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 22),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }
@@ -355,7 +483,7 @@ class _ConfettiPainter extends CustomPainter {
   const _ConfettiPainter({required this.progress});
 
   static List<_Particle> _generateParticles() {
-    final rng = math.Random(42); // fixed seed -> deterministic layout
+    final rng = math.Random(42);
     final colors = [
       Colors.red,
       Colors.blue,

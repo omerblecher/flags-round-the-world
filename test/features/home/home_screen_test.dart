@@ -49,12 +49,12 @@ void main() {
       expect(find.text('Grand Master'), findsOneWidget);
     });
 
-    testWidgets('SC1: shows dash when no best score', (tester) async {
+    testWidgets('SC1: shows not-played label when no best score', (tester) async {
       final repo = _StubHighScoreRepository({}); // null for all modes
       await tester.pumpWidget(_wrap(const HomeScreen(), repo));
       await tester.pumpAndSettle();
-      // At least one mode card shows the em dash (homeNoBestScore = "Best: —").
-      expect(find.textContaining('—'), findsWidgets);
+      // Mode cards show "Not played" when there is no recorded score.
+      expect(find.text('Not played'), findsWidgets);
     });
   });
 }

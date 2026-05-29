@@ -317,7 +317,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final name = countryNamesAsync.value?[_currentIsoCode] ?? _currentIsoCode;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(l10n.hintLocating(name)),
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2500),
+      behavior: SnackBarBehavior.floating,
+      // Float above the 120dp FlagTray so the snackbar is actually visible.
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 136),
+      backgroundColor: const Color(0xFF1A237E),
     ));
 
     setState(() => _hintIso = _currentIsoCode);
@@ -941,25 +945,61 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
+  void _onBackPressed() {
+    final session = ref.read(gameSessionProvider).value;
+    if (session == null) {
+      context.go('/');
+      return;
+    }
+    if (session.phase == GamePhase.playing) {
+      ref.read(gameSessionProvider.notifier).pauseGame();
+      setState(() => _isPauseOverlayVisible = true);
+    } else if (session.phase == GamePhase.paused) {
+      setState(() => _isPauseOverlayVisible = true);
+    } else {
+      context.go('/');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n    = AppLocalizations.of(context);
     final mapData = ref.watch(countryDataProvider);
 
-    return Scaffold(
-      body: mapData.when(
-        loading: () => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 12),
-              Text(l10n.loadingMap),
-            ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBackPressed();
+      },
+      child: Scaffold(
+        body: mapData.when(
+          loading: () => Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF1A237E), Color(0xFFA8D5E8)],
+              ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.public, size: 72, color: Colors.white70),
+                  const SizedBox(height: 24),
+                  const CircularProgressIndicator(color: Colors.white),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.loadingMap,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
           ),
+          error: (_, __) => Center(child: Text(l10n.mapLoadError)),
+          data: _buildMap,
         ),
-        error: (_, __) => Center(child: Text(l10n.mapLoadError)),
-        data: _buildMap,
       ),
     );
   }

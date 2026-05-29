@@ -35,7 +35,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             session.phase == GamePhase.paused)) {
       _showContinueDialog(session);
     } else if (session != null) {
-      // Stale session in bad state — clear silently (D-S02)
       await repo.clearSession();
     }
   }
@@ -86,7 +85,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _continueGame(GameSession session) async {
-    // Load all countries, then compute remaining = all - matched.
     final countries = await ref.read(countryDataProvider.future);
     final allIsoCodes = countries.map((c) => c.isoCode).toList();
     final matched = session.matchedIsoCodes.toSet();
@@ -109,17 +107,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         GameMode.grandMaster => l10n.modeGrandMasterName,
       };
 
+  void _showAboutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('About'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.public, size: 32, color: Color(0xFF1565C0)),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Flags Around the World',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'An educational geography game for all ages. '
+              'Drag-and-drop national flags onto their countries on the world map. '
+              'Learn every country\'s flag and location.',
+              style: TextStyle(fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Version 1.0.0',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '© 2025 Otis & Brooke',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final uri = Uri.parse(AppConstants.privacyPolicyUrl);
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            },
+            child: const Text('Privacy Policy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final repoAsync = ref.watch(highScoreRepositoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.homeTitle)),
-      body: repoAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (repo) => _buildBody(context, l10n, repo),
+      backgroundColor: const Color(0xFFF0F4F8),
+      body: SafeArea(
+        child: repoAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
+          data: (repo) => _buildBody(context, l10n, repo),
+        ),
       ),
     );
   }
@@ -130,9 +189,97 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     HighScoreRepository repo,
   ) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildModeList(context, l10n, repo)),
-        // Privacy policy footer (COMP-02)
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 12, 4),
+          child: Row(
+            children: [
+              const Icon(Icons.public, color: Color(0xFF1565C0), size: 28),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.homeTitle,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0D2E6B),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: Colors.grey),
+                tooltip: 'About',
+                onPressed: () => _showAboutDialog(context),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, bottom: 12),
+          child: Text(
+            l10n.modeSectionTitle,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+
+        // Mode cards
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              _ModeCard(
+                mode: GameMode.learn,
+                name: l10n.modeLearnName,
+                description: l10n.modeLearnDescription,
+                icon: Icons.explore,
+                cardColor: const Color(0xFF2E7D32),
+                bestScoreFuture: repo.getBestScore(GameMode.learn),
+                onTap: () => context.go('/play/${GameMode.learn.name}'),
+              ),
+              const SizedBox(height: 12),
+              _ModeCard(
+                mode: GameMode.flagsMaster,
+                name: l10n.modeFlagsMasterName,
+                description: l10n.modeFlagsMasterDescription,
+                icon: Icons.flag,
+                cardColor: const Color(0xFF1565C0),
+                bestScoreFuture: repo.getBestScore(GameMode.flagsMaster),
+                onTap: () => context.go('/play/${GameMode.flagsMaster.name}'),
+              ),
+              const SizedBox(height: 12),
+              _ModeCard(
+                mode: GameMode.geographicalMaster,
+                name: l10n.modeGeoMasterName,
+                description: l10n.modeGeoMasterDescription,
+                icon: Icons.compass_calibration,
+                cardColor: const Color(0xFFBF360C),
+                bestScoreFuture: repo.getBestScore(GameMode.geographicalMaster),
+                onTap: () =>
+                    context.go('/play/${GameMode.geographicalMaster.name}'),
+              ),
+              const SizedBox(height: 12),
+              _ModeCard(
+                mode: GameMode.grandMaster,
+                name: l10n.modeGrandMasterName,
+                description: l10n.modeGrandMasterDescription,
+                icon: Icons.emoji_events,
+                cardColor: const Color(0xFF4A148C),
+                bestScoreFuture: repo.getBestScore(GameMode.grandMaster),
+                onTap: () =>
+                    context.go('/play/${GameMode.grandMaster.name}'),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+
+        // Privacy footer
         _buildPrivacyFooter(context, l10n),
       ],
     );
@@ -141,90 +288,205 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildPrivacyFooter(BuildContext context, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: TextButton(
-        onPressed: () async {
-          final uri = Uri.parse(AppConstants.privacyPolicyUrl);
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        },
-        child: Text(
-          l10n.privacyPolicyLink,
-          style: const TextStyle(fontSize: 11),
+      child: Center(
+        child: TextButton(
+          onPressed: () async {
+            final uri = Uri.parse(AppConstants.privacyPolicyUrl);
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          },
+          child: Text(
+            l10n.privacyPolicyLink,
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildModeList(
-    BuildContext context,
-    AppLocalizations l10n,
-    HighScoreRepository repo,
-  ) {
-    final modes = [
-      _ModeInfo(
-        mode: GameMode.learn,
-        name: l10n.modeLearnName,
-        description: l10n.modeLearnDescription,
-      ),
-      _ModeInfo(
-        mode: GameMode.flagsMaster,
-        name: l10n.modeFlagsMasterName,
-        description: l10n.modeFlagsMasterDescription,
-      ),
-      _ModeInfo(
-        mode: GameMode.geographicalMaster,
-        name: l10n.modeGeoMasterName,
-        description: l10n.modeGeoMasterDescription,
-      ),
-      _ModeInfo(
-        mode: GameMode.grandMaster,
-        name: l10n.modeGrandMasterName,
-        description: l10n.modeGrandMasterDescription,
-      ),
-    ];
-
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      itemCount: modes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final info = modes[index];
-        return Card(
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            title: Text(
-              info.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(info.description),
-            trailing: FutureBuilder<int?>(
-              future: repo.getBestScore(info.mode),
-              builder: (ctx, snap) {
-                final text = snap.hasData && snap.data != null
-                    ? l10n.homeBestScore(snap.data!)
-                    : l10n.homeNoBestScore;
-                return Text(
-                  text,
-                  style: const TextStyle(fontSize: 12),
-                );
-              },
-            ),
-            onTap: () => context.go('/play/${info.mode.name}'),
-          ),
-        );
-      },
-    );
-  }
 }
 
-class _ModeInfo {
+// ---------------------------------------------------------------------------
+// Mode card widget
+// ---------------------------------------------------------------------------
+
+class _ModeCard extends StatefulWidget {
   final GameMode mode;
   final String name;
   final String description;
+  final IconData icon;
+  final Color cardColor;
+  final Future<int?> bestScoreFuture;
+  final VoidCallback onTap;
 
-  const _ModeInfo({
+  const _ModeCard({
     required this.mode,
     required this.name,
     required this.description,
+    required this.icon,
+    required this.cardColor,
+    required this.bestScoreFuture,
+    required this.onTap,
   });
+
+  @override
+  State<_ModeCard> createState() => _ModeCardState();
+}
+
+class _ModeCardState extends State<_ModeCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 80),
+      reverseDuration: const Duration(milliseconds: 150),
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  int _starsForScore(int? score) {
+    if (score == null) return 0;
+    if (score <= 80) return 3;
+    if (score <= 150) return 2;
+    return 1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _scaleController.forward(),
+      onTapUp: (_) {
+        _scaleController.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _scaleController.reverse(),
+      child: AnimatedBuilder(
+        animation: _scaleAnim,
+        builder: (_, child) => Transform.scale(
+          scale: _scaleAnim.value,
+          child: child,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.cardColor,
+                Color.lerp(widget.cardColor, Colors.black, 0.2)!,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.cardColor.withValues(alpha: 0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Mode icon
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(widget.icon, color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 14),
+
+              // Name + description
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.description,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Stars
+              FutureBuilder<int?>(
+                future: widget.bestScoreFuture,
+                builder: (ctx, snap) {
+                  final stars = snap.hasData
+                      ? _starsForScore(snap.data)
+                      : 0;
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(3, (i) {
+                          return Icon(
+                            i < stars
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: i < stars
+                                ? Colors.amber
+                                : Colors.white.withValues(alpha: 0.4),
+                            size: 18,
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 4),
+                      if (snap.hasData && snap.data != null)
+                        Text(
+                          'Best: ${snap.data}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 11,
+                          ),
+                        )
+                      else
+                        Text(
+                          'Not played',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
