@@ -14,7 +14,10 @@ const _palette = [
   Color(0xFFE8D870), // Antarctica / other — light yellow
 ];
 
-const double _kDotRadius = 4.5; // scene units for degenerate-path dot markers (micro-states)
+// Base screen-pixel radius for micro-state dots.  Divided by viewScale so
+// dots stay ~4 screen-pixels wide at any zoom — small enough not to overlap
+// in dense areas (Europe) but still visible and hittable.
+const double _kDotScreenRadius = 4.0;
 
 const _matchedColor = Color(0xFFAAAAAA); // grey for already-matched countries
 const _oceanColor   = Color(0xFFA8D5E8); // light blue background
@@ -81,15 +84,15 @@ class WorldMapPainter extends CustomPainter {
       }
     }
 
-    // Pass 2: degenerate micro-state dots drawn on top so neighbouring country
-    // fills (France, Spain, etc.) never paint over them.
+    // Pass 2: degenerate micro-state dots — fixed screen-pixel radius.
+    final dotRadius = (_kDotScreenRadius / viewScale).clamp(1.0, 5.0);
     for (int i = 0; i < countries.length; i++) {
       final country = countries[i];
       if (!country.isDegenerate) continue;
       final isMatched = matchedIsoCodes.contains(country.isoCode);
       fillPaint.color = isMatched ? _matchedColor : _palette[i % _palette.length];
-      canvas.drawCircle(country.centroid, _kDotRadius, fillPaint);
-      canvas.drawCircle(country.centroid, _kDotRadius, borderPaint);
+      canvas.drawCircle(country.centroid, dotRadius, fillPaint);
+      canvas.drawCircle(country.centroid, dotRadius, borderPaint);
     }
 
     // Centroid labels with collision detection.
