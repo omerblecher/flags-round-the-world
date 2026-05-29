@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- debug-overrides only — never applied in release builds -->
+    <!-- Allows user-installed CA certs in debug mode for proxy audit (see RESEARCH.md §Proxy Audit) -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
