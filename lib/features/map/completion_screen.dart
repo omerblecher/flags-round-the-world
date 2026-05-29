@@ -4,11 +4,14 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flags_around_the_world/features/game/game_mode.dart';
 import 'package:flags_around_the_world/features/game/game_session.dart';
 import 'package:flags_around_the_world/generated/l10n/app_localizations.dart';
+import 'package:flags_around_the_world/core/ads/ad_service_provider.dart';
+import 'package:flags_around_the_world/core/ads/admob_ad_service.dart';
 
 /// Returns the star count for a completed game.
 ///
@@ -21,7 +24,7 @@ int computeStarCount(int score, int? previousBest) {
   return 1;
 }
 
-class CompletionScreen extends StatefulWidget {
+class CompletionScreen extends ConsumerStatefulWidget {
   final GameSession session;
   final int? previousBest; // null = first game ever
 
@@ -32,10 +35,10 @@ class CompletionScreen extends StatefulWidget {
   });
 
   @override
-  State<CompletionScreen> createState() => _CompletionScreenState();
+  ConsumerState<CompletionScreen> createState() => _CompletionScreenState();
 }
 
-class _CompletionScreenState extends State<CompletionScreen>
+class _CompletionScreenState extends ConsumerState<CompletionScreen>
     with SingleTickerProviderStateMixin {
   late final bool _isNewPb;
   late final int _starCount;
@@ -75,6 +78,24 @@ class _CompletionScreenState extends State<CompletionScreen>
       _pbController.forward().whenComplete(() {
         if (mounted) setState(() => _showPbOverlay = false);
       });
+    }
+
+    // Show interstitial at game-complete — called once on mount, not in build().
+    // Safe to call before the ad is loaded (AdMobAdService no-ops if unavailable).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(adServiceProvider).showInterstitialAd();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adService = ref.read(adServiceProvider);
+    final screenWidth = MediaQuery.sizeOf(context).width.truncate();
+    if (adService is AdMobAdService) {
+      adService.loadBannerForWidth(screenWidth);
     }
   }
 
@@ -424,6 +445,17 @@ class _CompletionScreenState extends State<CompletionScreen>
                 );
               },
             ),
+
+          // Banner ad slot — pinned to the bottom of the result screen (D-P01).
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: ref.read(adServiceProvider).getBannerWidget(),
+            ),
+          ),
         ],
       ),
     );

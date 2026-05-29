@@ -11,6 +11,8 @@ import 'package:flags_around_the_world/core/constants.dart';
 import 'package:flags_around_the_world/core/data/high_score_repository.dart';
 import 'package:flags_around_the_world/core/data/game_state_repository.dart';
 import 'package:flags_around_the_world/core/data/country_data_service.dart';
+import 'package:flags_around_the_world/core/ads/ad_service_provider.dart';
+import 'package:flags_around_the_world/core/ads/admob_ad_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +26,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _checkSavedSession();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adService = ref.read(adServiceProvider);
+    final screenWidth = MediaQuery.sizeOf(context).width.truncate();
+    // Cast to AdMobAdService is needed to call loadBannerForWidth.
+    // Only AdMobAdService implements this method; StubAdService does not.
+    if (adService is AdMobAdService) {
+      adService.loadBannerForWidth(screenWidth);
+    }
   }
 
   Future<void> _checkSavedSession() async {
@@ -284,6 +298,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // Privacy footer
         _buildPrivacyFooter(context, l10n),
+
+        // Banner ad slot — pinned to the bottom below the footer.
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: SafeArea(
+            top: false,
+            child: ref.read(adServiceProvider).getBannerWidget(),
+          ),
+        ),
       ],
     );
   }
