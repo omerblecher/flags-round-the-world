@@ -1,13 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.otis.brooke.flags.around.the.world">
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- COMP-04: Block AD_ID permission — prevents GAID leakage from transitive AdMob deps -->
     <uses-permission
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove"/>
 
     <application
-        android:label="flags_around_the_world"
+        android:label="Flags Around the World"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:networkSecurityConfig="@xml/network_security_config">
