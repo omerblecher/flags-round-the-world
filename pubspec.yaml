@@ -1,7 +1,7 @@
 name: flags_around_the_world
 description: Educational flag-placement game
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: '>=3.7.0 <4.0.0'
@@ -22,9 +22,7 @@ dependencies:
   just_audio: ^0.10.5
   google_mobile_ads: ^8.0.0
   gma_mediation_unity: ^1.8.0
-  gma_mediation_ironsource: ^2.4.1
   gma_mediation_inmobi: ^2.1.0
-  gma_mediation_applovin: ^2.6.1
   url_launcher: ^6.3.0
   share_plus: ^10.0.0
 

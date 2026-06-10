@@ -3,6 +3,9 @@
 *.log
 *.pyc
 *.swp
+
+# Local emulator test screenshots
+screenshots/
 .DS_Store
 .atom/
 .build/

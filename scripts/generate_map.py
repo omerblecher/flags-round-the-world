@@ -24,6 +24,7 @@ TARGET_196 = {
     'sy','tj','tz','th','tl','tg','to','tt','tn','tr','tm','tv','ug','ua',
     'ae','gb','us','uy','uz','vu','ve','vn','ye','zm','zw',
     'va','tw','xk',  # Holy See, Taiwan, Kosovo
+    'eh',            # Western Sahara (Sahrawi Arab Democratic Republic)
 }
 
 # Approximate centroids (lon, lat) for micro-states not in Natural Earth 110m

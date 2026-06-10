@@ -95,6 +95,22 @@ class WorldMapPainter extends CustomPainter {
       canvas.drawCircle(country.centroid, dotRadius, borderPaint);
     }
 
+    // Pass 3: re-draw enclave countries on top so their fill is never overdrawn
+    // by the host country. Lesotho (ls) is at a lower index than South Africa
+    // (za), so without this pass South Africa's fill covers Lesotho entirely.
+    const enclaveIsos = {'ls'};
+    for (int i = 0; i < countries.length; i++) {
+      final country = countries[i];
+      if (!enclaveIsos.contains(country.isoCode)) continue;
+      if (country.isDegenerate) continue;
+      final isMatched = matchedIsoCodes.contains(country.isoCode);
+      fillPaint.color = isMatched ? _matchedColor : _palette[i % _palette.length];
+      for (final path in country.paths) {
+        canvas.drawPath(path, fillPaint);
+        canvas.drawPath(path, borderPaint);
+      }
+    }
+
     // Centroid labels with collision detection.
     // Larger countries are drawn first and take priority; small/dense regions
     // (Europe, Caribbean, Middle East) only show labels when there is room.

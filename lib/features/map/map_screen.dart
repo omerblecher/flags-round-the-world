@@ -78,6 +78,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   OverlayEntry? _activeOverlay;
 
+  // True from the moment a correct drop is accepted until the next flag's tray
+  // is shown (or until we navigate away).  Hides the FlagTray card so the
+  // Draggable feedback widget never bleeds through into the result screen.
+  bool _correctDropPending = false;
+
   // ---------- Current viewport scale (for scale-adaptive HighlightPainter) ---
 
   double _currentScale = 1.0;
@@ -382,6 +387,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
       await ref.read(gameSessionProvider.notifier).completeGame();
       // completeGame() already calls saveBestScore — no redundant save here.
       if (!mounted) return;
+      // Delay: lets the success animation and audio complete naturally, and
+      // ensures Flutter's drag system fully removes the feedback overlay before
+      // we push the result route (prevents the "stuck flag card" on the
+      // congratulations screen — the card is hidden by _correctDropPending but
+      // the extra time guarantees the overlay stack is clean).
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (!mounted) return;
       final completedSession = ref.read(gameSessionProvider).value;
       if (completedSession == null) return;
       context.go('/result', extra: {
@@ -391,6 +403,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     } else {
       setState(() {
         _currentIsoCode = _remainingIsoCodes.first;
+        _correctDropPending = false;
         // New GlobalKey instances → AnimatedSwitcher detects widget change.
         _trayKey = GlobalKey<FlagTrayState>();
         _trayCardKey = GlobalKey();
@@ -533,7 +546,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
           .recordDrop(hitIso, isCorrect: true);
       HapticFeedback.lightImpact();
       ref.read(audioServiceProvider).playCorrect();
-      setState(() => _hoveredIso = null);
+      // Hide the tray immediately so the Draggable feedback widget (card+pin)
+      // cannot render over the fly-to animation or the result screen.
+      setState(() {
+        _hoveredIso = null;
+        _correctDropPending = true;
+      });
       _animateCorrectDrop(hitIso, copyOffsetX: copyOffsetX);
     } else {
       ref.read(gameSessionProvider.notifier).recordDrop(
@@ -930,30 +948,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ),
             ),
-            // Flag tray — slides in when the current ISO code changes.
-            // _trayKey is re-created on each advance so AnimatedSwitcher detects
-            // the widget change and plays the slide-in transition.
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              // FadeTransition keeps the widget at its laid-out position so its
-              // hit-test area is valid throughout the transition. SlideTransition
-              // moves the hit-test area with the animation, making the Draggable
-              // unreachable during the 300 ms slide-in window (Bug 1 root cause).
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: child,
+            // Flag tray — hidden immediately on a correct drop (_correctDropPending)
+            // so the card+pin feedback widget cannot bleed through into the
+            // fly-to animation or onto the result screen.
+            Offstage(
+              offstage: _correctDropPending,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                // FadeTransition keeps the widget at its laid-out position so its
+                // hit-test area is valid throughout the transition. SlideTransition
+                // moves the hit-test area with the animation, making the Draggable
+                // unreachable during the 300 ms slide-in window (Bug 1 root cause).
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: child,
+                ),
+                child: _currentIsoCode.isEmpty
+                    ? const SizedBox.shrink()
+                    : FlagTray(
+                        key: _trayKey,
+                        currentIsoCode: _currentIsoCode,
+                        countryName: countryNames[_currentIsoCode] ?? _currentIsoCode,
+                        cardKey: _trayCardKey,
+                        showName: showName,
+                        hintsRemaining: hintsRemaining,
+                        onHintPressed: _useHint,
+                      ),
               ),
-              child: _currentIsoCode.isEmpty
-                  ? const SizedBox.shrink()
-                  : FlagTray(
-                      key: _trayKey,
-                      currentIsoCode: _currentIsoCode,
-                      countryName: countryNames[_currentIsoCode] ?? _currentIsoCode,
-                      cardKey: _trayCardKey,
-                      showName: showName,
-                      hintsRemaining: hintsRemaining,
-                      onHintPressed: _useHint,
-                    ),
             ),
           ],
         ),

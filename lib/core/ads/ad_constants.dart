@@ -8,8 +8,3 @@ const String kInterstitialAdUnitId = 'ca-app-pub-4227443066128564/2553758132';
 const String kRewardedAdUnitId     = 'ca-app-pub-4227443066128564/3930418981';
 const String kAppOpenAdUnitId      = 'ca-app-pub-4227443066128564/2282295392';
 
-// AppLovin — disabled pending account approval and Families Program re-entry.
-// Set to true ONLY when: (1) AppLovin account is approved, (2) AppLovin is back
-// on the Google Play Families Self-Certified Ads SDK Program list.
-const bool   kAppLovinEnabled = false;
-const String kAppLovinSdkKey  = ''; // populated when account approved

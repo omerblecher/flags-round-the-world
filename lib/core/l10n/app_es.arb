@@ -74,17 +74,17 @@
   "@modeLearnDescription": {
     "description": "Description of the Learn game mode"
   },
-  "modeFlagsMasterName": "Maestro de Banderas",
+  "modeFlagsMasterName": "Maestro de Bandera",
   "@modeFlagsMasterName": {
-    "description": "Name of the Flags Master game mode"
+    "description": "Name of the Flag Master game mode"
   },
   "modeFlagsMasterDescription": "Nombre solo bajo la tarjeta",
   "@modeFlagsMasterDescription": {
-    "description": "Description of the Flags Master game mode"
+    "description": "Description of the Flag Master game mode"
   },
-  "modeGeoMasterName": "Maestro Geográfico",
+  "modeGeoMasterName": "Maestro del Mapa",
   "@modeGeoMasterName": {
-    "description": "Name of the Geographical Master game mode"
+    "description": "Name of the Map Master game mode"
   },
   "modeGeoMasterDescription": "Nombres solo en el mapa",
   "@modeGeoMasterDescription": {

@@ -74,17 +74,17 @@
   "@modeLearnDescription": {
     "description": "Description of the Learn game mode"
   },
-  "modeFlagsMasterName": "Flags Master",
+  "modeFlagsMasterName": "Flag Master",
   "@modeFlagsMasterName": {
-    "description": "Name of the Flags Master game mode"
+    "description": "Name of the Flag Master game mode"
   },
   "modeFlagsMasterDescription": "Name under flag card only",
   "@modeFlagsMasterDescription": {
-    "description": "Description of the Flags Master game mode"
+    "description": "Description of the Flag Master game mode"
   },
-  "modeGeoMasterName": "Geographical Master",
+  "modeGeoMasterName": "Map Master",
   "@modeGeoMasterName": {
-    "description": "Name of the Geographical Master game mode"
+    "description": "Name of the Map Master game mode"
   },
   "modeGeoMasterDescription": "Names on map only",
   "@modeGeoMasterDescription": {
