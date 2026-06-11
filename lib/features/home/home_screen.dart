@@ -13,6 +13,7 @@ import 'package:flags_around_the_world/core/data/game_state_repository.dart';
 import 'package:flags_around_the_world/core/data/country_data_service.dart';
 import 'package:flags_around_the_world/core/ads/ad_service_provider.dart';
 import 'package:flags_around_the_world/core/ads/admob_ad_service.dart';
+import 'package:flags_around_the_world/features/map/flag_sequence.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -100,10 +101,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _continueGame(GameSession session) async {
     final countries = await ref.read(countryDataProvider.future);
-    final allIsoCodes = countries.map((c) => c.isoCode).toList();
     final matched = session.matchedIsoCodes.toSet();
-    final remaining =
-        allIsoCodes.where((iso) => !matched.contains(iso)).toList();
+
+    final List<String> remaining;
+    if (session.mode == GameMode.grandMaster) {
+      // Grand Master has a fixed order — restore that order minus matched codes.
+      final fullSequence = await buildGrandMasterSequence(countries);
+      remaining = fullSequence.where((iso) => !matched.contains(iso)).toList();
+    } else {
+      // Other modes use a random order — re-shuffle so the continue sequence
+      // is not in alphabetical JSON file order.
+      final allIsoCodes = countries.map((c) => c.isoCode).toList();
+      remaining = allIsoCodes.where((iso) => !matched.contains(iso)).toList();
+      remaining.shuffle();
+    }
 
     if (!mounted) return;
     context.go('/play/${session.mode.name}', extra: {

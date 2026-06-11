@@ -4,6 +4,17 @@ import argparse
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 
+# Simplification tolerance in degrees (applied with preserve_topology=True to
+# avoid self-intersecting polygons on narrow countries like Vietnam / Thailand).
+# 0.1° ≈ 11 km — keeps all narrow peninsulas (min ~50 km wide) while cutting
+# excess detail from island-rich coastlines (Canada, Russia, Indonesia, etc.).
+SIMPLIFY_TOLERANCE_DEG = 0.04
+
+# Drop individual polygons whose scene-space area is below this threshold.
+# Scene units: 1 unit ≈ 20 km. 4 sq units ≈ 1 600 km² — keeps Sicily, Sardinia,
+# Hokkaido, Honshu, etc. while discarding tiny uninhabited islets.
+MIN_POLY_AREA_SCENE_SQ = 2.0
+
 VIEWBOX_WIDTH = 2000.0
 VIEWBOX_HEIGHT = 1000.0
 
@@ -130,12 +141,28 @@ def synthetic_entry(iso, lon, lat, size_deg=SYNTHETIC_SIZE_DEG):
     }
 
 
+def polygon_area_scene(polygon):
+    """Approximate area in scene units² using the shoelace formula on projected coords."""
+    coords = [(lon_to_x(lon), lat_to_y(lat)) for lon, lat in polygon.exterior.coords[:-1]]
+    n = len(coords)
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += coords[i][0] * coords[j][1]
+        area -= coords[j][0] * coords[i][1]
+    return abs(area) / 2.0
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', default=None)
+    parser.add_argument('--simplify', type=float, default=SIMPLIFY_TOLERANCE_DEG,
+                        help='Topology-preserving simplification tolerance in degrees')
+    parser.add_argument('--min-area', type=float, default=MIN_POLY_AREA_SCENE_SQ,
+                        help='Drop polygons smaller than this area in scene units²')
     args = parser.parse_args()
 
-    url = args.input or 'https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip'
+    url = args.input or 'https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip'
     print(f"Loading from {url}...")
     gdf = gpd.read_file(url)
     gdf = gdf.to_crs('EPSG:4326')
@@ -166,10 +193,20 @@ def main():
             for poly in polys:
                 if not isinstance(poly, Polygon):
                     continue
-                path = polygon_to_path(poly)
+                # Filter tiny islands before simplification to avoid wasting effort.
+                if polygon_area_scene(poly) < args.min_area:
+                    continue
+                # Topology-preserving simplification prevents self-intersections
+                # that would confuse Flutter Path.contains() on narrow shapes.
+                simplified = poly.simplify(args.simplify, preserve_topology=True)
+                if simplified.is_empty or not isinstance(simplified, Polygon):
+                    continue
+                if polygon_area_scene(simplified) < args.min_area:
+                    continue
+                path = polygon_to_path(simplified)
                 if path:
                     all_paths.append(path)
-                for lon, lat in list(poly.exterior.coords):
+                for lon, lat in list(simplified.exterior.coords):
                     all_xs.append(lon_to_x(lon))
                     all_ys.append(lat_to_y(lat))
 
