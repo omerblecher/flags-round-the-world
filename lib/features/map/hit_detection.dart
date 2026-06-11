@@ -132,8 +132,14 @@ Rect _expandedBbox(CountryData country, double minSceneDiag, {double scale = 1.0
   // Viewport-area threshold (VIS-02 / ACCS-03): if on-screen bbox area is
   // smaller than a 48×48dp square, guarantee a circular expansion of that
   // minimum area regardless of shape or diagonal.
+  //
+  // Degenerate (synthetic 4-vertex) countries are excluded from this circular
+  // expansion: their 1.5° box already receives the 2×-diagonal rect expansion
+  // below (~14 scene units).  The 48dp circle (~27 units) extends far into
+  // neighbouring continental territory — BH covering Abu Dhabi, MT covering
+  // Tripoli, ST covering Libreville — causing systematic misclassification.
   final screenArea = rect.width * rect.height * scale * scale;
-  if (screenArea < _kMinScreenArea) {
+  if (screenArea < _kMinScreenArea && !country.isDegenerate) {
     final expansionRadius = sqrt(_kMinScreenArea / pi) / scale;
     return Rect.fromCenter(
       center: country.centroid,

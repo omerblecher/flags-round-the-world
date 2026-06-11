@@ -42,9 +42,15 @@ CountryData _makeDegenerate({
     w: pathRect.width,
     h: pathRect.height,
   );
+  // pathStrings must include the rect corners so _nearestVertexDistSq works
+  // in the tiebreaker when the drop is outside the exact path.
+  final pathStr = 'M${pathRect.left},${pathRect.top} '
+      'L${pathRect.right},${pathRect.top} '
+      'L${pathRect.right},${pathRect.bottom} '
+      'L${pathRect.left},${pathRect.bottom} Z';
   return CountryData(
     isoCode: iso,
-    pathStrings: const [],
+    pathStrings: [pathStr],
     paths: [path],
     boundingBox: bbox,
     centroid: centroid,
@@ -95,26 +101,26 @@ void main() {
       expect(result, equals('LU'));
     });
 
-    test('GAME-02: micro-state expanded bbox included in primary pass (MK-class fix)', () {
-      // Micro-state: tiny 3×3 path, diagonal ≈ 4.24 < 32 → expanded bbox kicks in.
+    test('GAME-02: small country exact-path hit beats large neighbour exact-path hit (MK-class)', () {
+      // Micro-state: tiny 3×3 path — both MK and GR contain the drop point via
+      // exact path.  exactHits pool is [MK, GR]; tiebreaker picks MK because its
+      // poly-bbox-centre is much closer to the drop (≈0.71 units) than GR's (≈69).
       final mk = _makeCountry(
         iso: 'MK',
         pathRect: Rect.fromLTWH(100, 100, 3, 3),
         centroid: const Offset(101.5, 101.5),
       );
 
-      // Large neighbour whose exact path ALSO contains the drop point.
+      // Large neighbour — its path also contains (101, 101).
       final large = _makeCountry(
         iso: 'GR',
         pathRect: Rect.fromLTWH(50, 50, 200, 200),
         centroid: const Offset(150, 150),
       );
 
-      // (110, 110) is outside MK's 3×3 exact path but inside its expanded
-      // ~22-unit bbox, AND inside GR's large exact path.
-      // With _primaryContains, MK joins the primary candidates via expanded bbox.
-      // Smallest-area tiebreaker prefers MK (area=9) over GR (area=40000).
-      final result = hitTest(const Offset(110, 110), [mk, large]);
+      // (101, 101) is inside BOTH MK's 3×3 exact path and GR's large path.
+      // Both are in exactHits; MK wins via poly-bbox-centre proximity.
+      final result = hitTest(const Offset(101, 101), [mk, large]);
       expect(result, equals('MK'));
     });
 
