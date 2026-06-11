@@ -22,38 +22,64 @@ const double _kMinScreenArea = 2304.0;
 /// [scale] is the current InteractiveViewer scale (scene→screen factor).
 ///
 /// Algorithm:
-/// 1. Exact-path candidates: countries whose SVG path contains the point.
-/// 2. Bbox-expansion candidates: countries whose scale-aware expanded bbox
-///    contains the point (catches drops near tiny/degenerate countries).
-/// 3. Fallback: expanded bbox for ALL countries (catches ocean drops near coasts).
-/// 4. Tiebreaker: closest effective position wins.
+/// 1. Exact-path pool: countries whose SVG path contains the point, PLUS
+///    degenerate micro-states whose expanded bbox contains it (they have no
+///    real polygon — a surrounding country's path would otherwise beat them).
+/// 2. Bbox-only pool: non-degenerate countries whose expanded bbox contains
+///    the point (catches drops near small countries when path is just missed).
+/// 3. Fallback: expanded bbox for ALL countries (ocean drops near coasts).
+/// 4. Tiebreaker within the chosen pool (exact-path pool always wins over
+///    bbox-only pool, preventing a neighbour's close polygon vertex from
+///    beating the correct country whose polygon actually contains the drop).
 ///    — Exact-path hits: min(polygon-bbox-center, country-centroid) distance.
-///    — Bbox-only hits: nearest polygon vertex distance — avoids penalising
-///      large countries whose centroids are far from border cities.
+///    — Bbox-only hits: nearest polygon vertex distance.
 String? hitTest(Offset scenePoint, List<CountryData> countries,
     {double scale = 1.0}) {
   final minSceneDiag = _kMinScreenDiagonal / scale;
 
-  // 1 & 2. Collect candidates from exact path OR expanded bbox.
-  final candidates = countries
-      .where((c) => _primaryContains(c, scenePoint, minSceneDiag, scale: scale))
-      .toList();
+  // 1. Split into exact-path hits and bbox-only hits.
+  //    Keeping them separate is the key fix: a country whose polygon contains
+  //    the drop point must always beat a neighbour that only qualifies via
+  //    expanded bounding box, regardless of vertex distances.  Without this,
+  //    the nearest-vertex tiebreaker used for bbox-only hits can beat the
+  //    correct country's centroid/bbox-centre distance when the drop is near
+  //    the polygon border (observed for Morocco, Chile, Poland, Kazakhstan,
+  //    Laos, Hungary, Turkmenistan, …).
+  //
+  //    Degenerate micro-states (synthetic 4-vertex rectangles for countries
+  //    too small to digitise) are promoted into the exact-path pool so that
+  //    Singapore, Monaco, etc. can still beat the surrounding country whose
+  //    real polygon covers their location.
+  final exactHits = <CountryData>[];
+  final bboxHits  = <CountryData>[];
+  for (final c in countries) {
+    if (c.paths.any((p) => p.contains(scenePoint))) {
+      exactHits.add(c);
+    } else if (_expandedBbox(c, minSceneDiag, scale: scale).contains(scenePoint)) {
+      if (c.isDegenerate) {
+        exactHits.add(c);
+      } else {
+        bboxHits.add(c);
+      }
+    }
+  }
 
-  // 3. Fallback to expanded bbox for all countries when nothing hit above.
-  final pool = candidates.isNotEmpty
-      ? candidates
-      : countries
-          .where((c) => _expandedBbox(c, minSceneDiag, scale: scale).contains(scenePoint))
-          .toList();
+  // 2 & 3. Choose pool: exact-path > bbox-only > ocean fallback.
+  final List<CountryData> pool;
+  if (exactHits.isNotEmpty) {
+    pool = exactHits;
+  } else if (bboxHits.isNotEmpty) {
+    pool = bboxHits;
+  } else {
+    pool = countries
+        .where((c) => _expandedBbox(c, minSceneDiag, scale: scale).contains(scenePoint))
+        .toList();
+  }
 
   if (pool.isEmpty) return null;
   if (pool.length == 1) return pool.first.isoCode;
 
-  // 4. Tiebreaker: closest effective position wins.
-  // - Exact-path hits: polygon bbox-center or country centroid (whichever is
-  //   nearer) — handles multi-territory countries like Malaysia correctly.
-  // - Bbox-only hits: nearest polygon vertex — avoids penalising large
-  //   countries whose centroids are far from border cities (e.g., DRC/Goma).
+  // 4. Tiebreaker within the chosen pool.
   pool.sort((a, b) {
     final aDist = _tiebreakDistSq(a, scenePoint);
     final bDist = _tiebreakDistSq(b, scenePoint);
@@ -98,11 +124,6 @@ double _nearestVertexDistSq(List<String> pathStrings, Offset point) {
     }
   }
   return minDist;
-}
-
-bool _primaryContains(CountryData country, Offset point, double minSceneDiag, {double scale = 1.0}) {
-  if (country.paths.any((p) => p.contains(point))) return true;
-  return _expandedBbox(country, minSceneDiag, scale: scale).contains(point);
 }
 
 Rect _expandedBbox(CountryData country, double minSceneDiag, {double scale = 1.0}) {
